@@ -195,20 +195,20 @@ type HistoricoItem = {    // usado para sugestões por frequência (Fase 2)
 ## 9. Funcionalidades por fase (quadro de desenvolvimento)
 
 ### ✅ Fase 1 — MVP
-- [ ] Setup do projeto: Expo + TypeScript + expo-router + Zustand + AsyncStorage
-- [ ] Tema visual (cores, tipografia, cores por categoria)
-- [ ] Base de produtos com 150+ itens, categorias, emojis e sinônimos
-- [ ] Categorização automática pelo nome (busca normalizada, sem acento)
-- [ ] Tela Início com lista ativa e criação de nova lista
-- [ ] Tela Lista: adicionar item com autocompletar e chips de sugestão
-- [ ] Agrupamento por categoria
-- [ ] Quantidade e unidade (+ / −)
-- [ ] Editar item (nome, quantidade, unidade, categoria, observação)
-- [ ] Excluir item com deslizar + desfazer
-- [ ] Modo Mercado: marcar como pego, vibração, riscado, contador, tela ligada
-- [ ] Tela "Compra concluída" e histórico de listas
-- [ ] Compartilhar lista como texto (WhatsApp)
-- [ ] Persistência local completa (fechar e abrir o app mantém tudo)
+- [x] Setup do projeto: Expo + TypeScript + expo-router + Zustand + AsyncStorage
+- [x] Tema visual (cores, tipografia, cores por categoria)
+- [x] Base de produtos com 150+ itens, categorias, emojis e sinônimos
+- [x] Categorização automática pelo nome (busca normalizada, sem acento)
+- [x] Tela Início com lista ativa e criação de nova lista
+- [x] Tela Lista: adicionar item com autocompletar e chips de sugestão
+- [x] Agrupamento por categoria
+- [x] Quantidade e unidade (+ / −)
+- [x] Editar item (nome, quantidade, unidade, categoria, observação)
+- [x] Excluir item com deslizar + desfazer
+- [x] Modo Mercado: marcar como pego, vibração, riscado, contador, tela ligada
+- [x] Tela "Compra concluída" e histórico de listas
+- [x] Compartilhar lista como texto (WhatsApp)
+- [x] Persistência local completa (fechar e abrir o app mantém tudo)
 
 ### 🚀 Fase 2 — Inteligência e praticidade
 - [ ] **Repetir última compra** com um toque
