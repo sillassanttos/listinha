@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { type EstadoSync, useEstadoSync } from '@/sync/sincronizador';
+import { type EstadoSync, useSituacaoSync } from '@/sync/sincronizador';
 import { cores, espaco, fonte, raio } from '@/theme';
 
 const ROTULO: Record<EstadoSync, string> = {
@@ -21,12 +21,12 @@ const COR: Partial<Record<EstadoSync, string>> = {
 };
 
 // Fase 3: faixa "Lista da família" com a situação da sincronização; toque abre a tela Família.
-export function SeloFamilia() {
-  const estado = useEstadoSync((s) => s.estado);
+export function SeloFamilia({ remotoId, listaId }: { remotoId: string; listaId: string }) {
+  const { estado } = useSituacaoSync(remotoId);
   const cor = COR[estado] ?? cores.primariaEscura;
   return (
     <Pressable
-      onPress={() => router.push('/familia')}
+      onPress={() => router.push({ pathname: '/familia', params: { lista: listaId } })}
       accessibilityRole="button"
       accessibilityLabel={`Lista da família, ${ROTULO[estado]}. Abrir Família`}
       style={({ pressed }) => [styles.selo, { borderColor: cor + '55' }, pressed && { opacity: 0.7 }]}

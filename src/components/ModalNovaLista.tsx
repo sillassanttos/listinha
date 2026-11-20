@@ -11,24 +11,28 @@ type Props = {
   aviso?: string;
   onCancelar: () => void;
   onCriar: (nome: string) => void;
+  /** Para reaproveitar em "Renomear" (Fase 3). */
+  titulo?: string;
+  nomeInicial?: string;
+  textoBotao?: string;
 };
 
 const NOME_PADRAO = 'Compra da semana';
 
 // Janela para dar nome à lista nova.
-export function ModalNovaLista({ visivel, aviso, onCancelar, onCriar }: Props) {
-  const [nome, setNome] = useState(NOME_PADRAO);
+export function ModalNovaLista({ visivel, aviso, onCancelar, onCriar, titulo = 'Nova lista 📝', nomeInicial = NOME_PADRAO, textoBotao = 'Criar' }: Props) {
+  const [nome, setNome] = useState(nomeInicial);
 
   useEffect(() => {
-    if (visivel) setNome(NOME_PADRAO);
-  }, [visivel]);
+    if (visivel) setNome(nomeInicial);
+  }, [visivel, nomeInicial]);
 
   return (
     <Modal visible={visivel} transparent animationType="fade" onRequestClose={onCancelar}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.fundo}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onCancelar} accessibilityLabel="Fechar" />
         <View style={styles.janela}>
-          <Text style={styles.titulo}>Nova lista 📝</Text>
+          <Text style={styles.titulo}>{titulo}</Text>
           {aviso ? <Text style={styles.aviso}>{aviso}</Text> : null}
           <Text style={styles.rotulo}>Nome da lista</Text>
           <TextInput
@@ -45,7 +49,7 @@ export function ModalNovaLista({ visivel, aviso, onCancelar, onCriar }: Props) {
           />
           <View style={styles.botoes}>
             <Botao titulo="Cancelar" variante="secundario" onPress={onCancelar} style={{ flex: 1 }} />
-            <Botao titulo="Criar" onPress={() => onCriar(nome)} style={{ flex: 1 }} />
+            <Botao titulo={textoBotao} onPress={() => onCriar(nome)} style={{ flex: 1 }} />
           </View>
         </View>
       </KeyboardAvoidingView>

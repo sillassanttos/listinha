@@ -26,7 +26,8 @@ import {
 // Só itens da lista ativa; listas do histórico são só leitura.
 export default function EditarItemTela() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const item = useListaStore((s) => s.listaAtiva?.itens.find((i) => i.id === id));
+  // Várias listas: o item pode estar em qualquer lista aberta (ids de item são únicos).
+  const item = useListaStore((s) => s.listas.flatMap((l) => l.itens).find((i) => i.id === id));
 
   if (!item) {
     return (

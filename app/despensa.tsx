@@ -5,6 +5,7 @@ import { Pressable, SectionList, StyleSheet, Text, TextInput, View } from 'react
 
 import { Aviso } from '@/components/Aviso';
 import { CategoriaHeader } from '@/components/CategoriaHeader';
+import { SeletorLista } from '@/components/SeletorLista';
 import { useListaStore } from '@/store/useListaStore';
 import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
 import { type ItemDespensa, filtrarDespensa, itensDaCasa, paraImportar, secoesDespensa } from '@/utils/despensa';
@@ -16,7 +17,7 @@ import { vibrarLeve, vibrarPego } from '@/utils/vibrar';
 type Secao = { titulo: 'acabando' | ItemDespensa['categoria']; data: ItemDespensa[] };
 
 // Modo Despensa / "Acabou" (Fase 2): em casa, toque em "Acabou" no que terminou e o item
-// vai para a lista ativa (a próxima compra). Sem lista ativa, uma "Compra da semana" é criada.
+// vai para a lista atual (a aberta por último; dá para trocar no seletor). Sem lista, uma "Compra da semana" é criada.
 export default function DespensaTela() {
   const historico = useListaStore((s) => s.historico);
   const listaAtiva = useListaStore((s) => s.listaAtiva);
@@ -87,6 +88,7 @@ export default function DespensaTela() {
               Em casa, toque em <Text style={styles.negrito}>Acabou</Text> no que terminou: o item vai para{' '}
               {listaAtiva ? `a lista "${listaAtiva.nome}"` : 'uma lista nova'}.
             </Text>
+            <SeletorLista />
             <View style={styles.busca}>
               <Ionicons name="search" size={20} color={cores.textoSuave} />
               <TextInput
