@@ -1,5 +1,6 @@
-import { CATEGORIAS, obterCategoria } from '@/data/categorias';
+import { CATEGORIAS, obterCategoria, sanearOrdemCategorias } from '@/data/categorias';
 import type { CategoriaId, ItemLista, Lista, Unidade } from '@/types';
+import { type CategoriasManuais, sanearCategoriasManuais } from '@/utils/categoriasManuais';
 import { UNIDADES, passoDaUnidade } from '@/utils/quantidade';
 
 // Leitura segura do que está salvo no celular (AsyncStorage).
@@ -8,7 +9,32 @@ import { UNIDADES, passoDaUnidade } from '@/utils/quantidade';
 
 export const VERSAO_DADOS = 1;
 
-export type DadosSalvos = { listaAtiva: Lista | null; historico: Lista[] };
+/** Foto encontrada (uri) ou procurada sem sucesso (null), com a data da busca. */
+export type ImagemSalva = { uri: string | null; em: number };
+
+export type DadosSalvos = {
+  listaAtiva: Lista | null;
+  historico: Lista[];
+  /** Cache de fotos online por nome normalizado do item (Fase 2). */
+  imagens: Record<string, ImagemSalva>;
+  /** Configuração: buscar fotos no Open Food Facts. */
+  imagensOnline: boolean;
+  /** Ordem das categorias (corredores do mercado do usuário). */
+  ordemCategorias: CategoriaId[];
+  /** Categoria escolhida à mão por item (chave de busca do nome -> categoria). */
+  categoriasManuais: CategoriasManuais;
+};
+
+function sanearImagens(v: unknown): Record<string, ImagemSalva> {
+  if (!ehObjeto(v)) return {};
+  const resultado: Record<string, ImagemSalva> = {};
+  for (const [chave, valor] of Object.entries(v)) {
+    if (!ehObjeto(valor) || typeof valor.em !== 'number') continue;
+    const uri = typeof valor.uri === 'string' && /^https:\/\//.test(valor.uri) ? valor.uri : null;
+    resultado[chave] = { uri, em: valor.em };
+  }
+  return resultado;
+}
 
 const UNIDADES_VALIDAS = new Set<string>(UNIDADES.map((u) => u.id));
 
@@ -51,12 +77,18 @@ function sanearLista(v: unknown): Lista | null {
     itens,
     criadaEm: numeroOu(v.criadaEm, 0),
     finalizadaEm: typeof v.finalizadaEm === 'number' ? v.finalizadaEm : undefined,
+    orcamento: typeof v.orcamento === 'number' && Number.isFinite(v.orcamento) && v.orcamento > 0 ? v.orcamento : undefined,
   };
 }
 
 /** Converte o que veio do armazenamento (qualquer coisa) em dados válidos para o app. */
 export function sanearDados(salvo: unknown): DadosSalvos {
-  if (!ehObjeto(salvo)) return { listaAtiva: null, historico: [] };
+  if (!ehObjeto(salvo)) {
+    return { listaAtiva: null, historico: [], imagens: {}, imagensOnline: true,
+      ordemCategorias: sanearOrdemCategorias(undefined),
+      categoriasManuais: {},
+    };
+  }
   const ativa = sanearLista(salvo.listaAtiva);
   const historico = Array.isArray(salvo.historico)
     ? salvo.historico.map(sanearLista).filter((l): l is Lista => l !== null)
@@ -65,6 +97,10 @@ export function sanearDados(salvo: unknown): DadosSalvos {
     // Uma lista ativa marcada como finalizada (dado inconsistente) vai para o histórico.
     listaAtiva: ativa && !ativa.finalizadaEm ? ativa : null,
     historico: ativa?.finalizadaEm ? [ativa, ...historico] : historico,
+    imagens: sanearImagens(salvo.imagens),
+    imagensOnline: salvo.imagensOnline !== false, // ligado por padrão
+    ordemCategorias: sanearOrdemCategorias(salvo.ordemCategorias),
+    categoriasManuais: sanearCategoriasManuais(salvo.categoriasManuais),
   };
 }
 

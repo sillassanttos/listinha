@@ -9,12 +9,14 @@ type Props = {
   /** Identificador que muda a cada aviso, para reiniciar mesmo com o mesmo texto. */
   chave?: number;
   acao?: { titulo: string; onPress: () => void };
+  /** Segunda ação opcional (ex.: "Preço" ao lado de "Desfazer"). */
+  acao2?: { titulo: string; onPress: () => void };
   duracao?: number;
   onFechar: () => void;
 };
 
-// Snackbar simples no rodapé. Reaproveitado depois pelo "desfazer" ao excluir.
-export function Aviso({ mensagem, chave, acao, duracao = 2500, onFechar }: Props) {
+// Snackbar simples no rodapé: avisos, "Desfazer" e atalhos rápidos.
+export function Aviso({ mensagem, chave, acao, acao2, duracao = 2500, onFechar }: Props) {
   const opacidade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -32,6 +34,11 @@ export function Aviso({ mensagem, chave, acao, duracao = 2500, onFechar }: Props
   return (
     <Animated.View style={[styles.caixa, { opacity: opacidade }]} accessibilityLiveRegion="polite">
       <Text style={styles.texto}>{mensagem}</Text>
+      {acao2 && (
+        <Pressable onPress={acao2.onPress} hitSlop={12}>
+          <Text style={styles.acao}>{acao2.titulo}</Text>
+        </Pressable>
+      )}
       {acao && (
         <Pressable onPress={acao.onPress} hitSlop={12}>
           <Text style={styles.acao}>{acao.titulo}</Text>

@@ -30,6 +30,11 @@ describe('gerarTextoLista', () => {
     );
   });
 
+  it('segue a ordem de corredores do usuário', () => {
+    const texto = gerarTextoLista(listaExemplo(), ['mercearia', 'hortifruti', 'outros']);
+    expect(texto.indexOf('🍚 Mercearia')).toBeLessThan(texto.indexOf('🥬 Hortifrúti'));
+  });
+
   it('mostra observação e vírgula decimal', () => {
     const l = listaExemplo();
     l.itens[0] = { ...l.itens[0], quantidade: 1.5, observacao: 'integral' };

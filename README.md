@@ -13,6 +13,16 @@ O documento do projeto, com fases, telas e modelo de dados, é o [LISTINHA.md](L
 - Compra concluída 🎉, histórico de compras e compartilhar a lista como texto (WhatsApp).
 - Tudo salvo no celular, offline; "Limpar dados" nas Configurações.
 
+## Fase 2 — Inteligência
+
+- **Repetir última compra** e **sugestões por frequência** ("Costuma comprar" na lista, "Pode estar acabando" no Início).
+- **Importar do WhatsApp:** cola um texto e cada linha vira item, com quantidade e unidade quando houver.
+- **Fotos online** do Open Food Facts para itens fora do catálogo (guardadas no celular; dá para desligar).
+- **Preço e total** do carrinho no Modo Mercado e **orçamento** com alerta ao estourar.
+- **Ordem dos corredores** escolhida nas Configurações.
+- **Categoria lembrada:** a categoria trocada à mão vale para as próximas vezes.
+- **Despensa / "Acabou":** em casa, marca o que terminou e o item vai para a próxima lista.
+
 ## Como rodar no celular
 
 1. Instale o **Expo Go** no celular (Play Store / App Store) e deixe-o atualizado: o projeto usa o **Expo SDK 58**.
@@ -44,11 +54,11 @@ Use `npx.cmd expo start` e `npm.cmd install`, sem mudar a política do Windows.
 ## Estrutura
 
 ```
-app/               rotas (expo-router): início, lista, modo mercado, histórico, configurações
+app/               rotas (expo-router): início, lista, item, importar, modo mercado, despensa, histórico, configurações
 src/components/    componentes reutilizáveis
 src/data/          base de produtos e categorias
 src/store/         estado global (Zustand + AsyncStorage)
-src/utils/         normalização, categorização, compartilhamento
+src/utils/         regras puras (categorização, listas, frequência, preço, importar, despensa…) com testes
 src/theme/         cores, espaçamentos, fontes
 src/types/         tipos do domínio
 ```

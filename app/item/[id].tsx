@@ -4,11 +4,12 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Botao } from '@/components/Botao';
-import { ORDEM_CATEGORIAS, obterCategoria } from '@/data/categorias';
+import { obterCategoria } from '@/data/categorias';
 import { useListaStore } from '@/store/useListaStore';
 import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
 import type { CategoriaId, ItemLista, Unidade } from '@/types';
 import { categorizar } from '@/utils/categorizar';
+import { categoriaSugerida } from '@/utils/categoriasManuais';
 import {
   UNIDADES,
   ajustarQuantidade,
@@ -37,6 +38,8 @@ export default function EditarItemTela() {
 
 function Formulario({ item }: { item: ItemLista }) {
   const atualizarItem = useListaStore((s) => s.atualizarItem);
+  const ordemCategorias = useListaStore((s) => s.ordemCategorias);
+  const categoriasManuais = useListaStore((s) => s.categoriasManuais);
 
   const [nome, setNome] = useState(item.nome);
   const [quantidade, setQuantidade] = useState(item.quantidade);
@@ -57,13 +60,14 @@ function Formulario({ item }: { item: ItemLista }) {
 
   function mudarNome(novo: string) {
     setNome(novo);
-    // Enquanto o usuário não escolhe a categoria na mão, ela acompanha o nome.
-    const sugestao = categorizar(novo);
+    // Enquanto o usuário não escolhe a categoria na mão, ela acompanha o nome
+    // (inclusive a categoria que ele já escolheu antes para esse nome).
+    const sugestao = categoriaSugerida(novo, categoriasManuais);
     if (!categoriaEscolhida) {
       setCategoria(sugestao.categoria);
       setEmoji(sugestao.emoji);
     } else {
-      setEmoji(sugestao.produto ? sugestao.emoji : obterCategoria(categoria).emoji);
+      setEmoji(categorizar(novo).produto ? sugestao.emoji : obterCategoria(categoria).emoji);
     }
   }
 
@@ -93,6 +97,9 @@ function Formulario({ item }: { item: ItemLista }) {
   }
 
   const cat = obterCategoria(categoria);
+  // Categoria diferente da automática fica lembrada ao salvar (Fase 2).
+  const automatica = categorizar(nome).categoria;
+  const nomeCurto = nome.trim();
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -187,7 +194,7 @@ function Formulario({ item }: { item: ItemLista }) {
 
         <Text style={styles.rotulo}>Categoria</Text>
         <View style={styles.grade}>
-          {ORDEM_CATEGORIAS.map((c) => {
+          {ordemCategorias.map((c) => {
             const info = obterCategoria(c);
             const ativa = c === categoria;
             return (
@@ -208,6 +215,12 @@ function Formulario({ item }: { item: ItemLista }) {
             );
           })}
         </View>
+
+        {nomeCurto && categoria !== automatica ? (
+          <Text style={styles.dica}>
+            💡 Da próxima vez, “{nomeCurto}” já entra em {cat.nome}.
+          </Text>
+        ) : null}
 
         <Text style={styles.rotulo}>Observação</Text>
         <TextInput
@@ -275,5 +288,6 @@ const styles = StyleSheet.create({
   opcaoTextoAtivo: { color: cores.textoSobrePrimaria },
   categoria: { minHeight: 44, paddingHorizontal: espaco.md, borderRadius: raio.pilula, borderWidth: 1, justifyContent: 'center' },
   categoriaTexto: { fontSize: fonte.tamanho.pequeno + 1, fontWeight: fonte.peso.medio },
+  dica: { fontSize: fonte.tamanho.pequeno, color: cores.textoSecundario, marginTop: espaco.xs },
   campoObservacao: { minHeight: 72, paddingTop: espaco.md, textAlignVertical: 'top' },
 });
