@@ -71,6 +71,13 @@ describe('sanearDados', () => {
     expect(sanearDados({ listaAtiva: { id: 'a', itens: [], orcamento: 'muito' } }).listaAtiva?.orcamento).toBeUndefined();
   });
 
+  it('lista compartilhada: precisa de id e código; lixo some', () => {
+    const ok = sanearDados({ listaAtiva: { id: 'a', itens: [], compartilhada: { id: 'r1', codigo: 'AB3K7Q' } } });
+    expect(ok.listaAtiva?.compartilhada).toEqual({ id: 'r1', codigo: 'AB3K7Q' });
+    expect(sanearDados({ listaAtiva: { id: 'a', itens: [], compartilhada: { id: 'r1' } } }).listaAtiva?.compartilhada).toBeUndefined();
+    expect(sanearDados({ listaAtiva: { id: 'a', itens: [], compartilhada: 'sim' } }).listaAtiva?.compartilhada).toBeUndefined();
+  });
+
   it('lista ativa já finalizada vai para o histórico', () => {
     const r = sanearDados({ listaAtiva: { id: 'a', nome: 'X', criadaEm: 1, finalizadaEm: 9, itens: [] }, historico: [] });
     expect(r.listaAtiva).toBeNull();

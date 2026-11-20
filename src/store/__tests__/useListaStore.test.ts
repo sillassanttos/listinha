@@ -65,6 +65,57 @@ describe('persistência do store (fechar e abrir o app mantém tudo)', () => {
     expect(useListaStore.getState().importarItens([paraImportar(casa[0])]).jaEstavam).toBe(1);
   });
 
+  it('Família: o que vem do servidor só entra na lista compartilhada certa', () => {
+    const s = useListaStore.getState();
+    s.novaLista('Casa', false);
+    const arroz = s.adicionarItem('arroz')!.item;
+    const leite = { ...arroz, id: 'remoto-1', nome: 'Leite' };
+
+    useListaStore.getState().aplicarRemoto('r1', { itens: [leite] });
+    expect(useListaStore.getState().listaAtiva?.itens.map((i) => i.nome)).toEqual(['Arroz']); // não é compartilhada
+
+    useListaStore.getState().definirCompartilhada({ id: 'r1', codigo: 'AB3K7Q' });
+    useListaStore.getState().aplicarRemoto('outra', { itens: [leite] });
+    expect(useListaStore.getState().listaAtiva?.itens).toHaveLength(1);
+    useListaStore.getState().aplicarRemoto('r1', { itens: [arroz, leite], nome: 'Casa da vó', orcamento: 200 });
+    expect(useListaStore.getState().listaAtiva).toMatchObject({ nome: 'Casa da vó', orcamento: 200 });
+    useListaStore.getState().aplicarRemoto('r1', { orcamento: null });
+    expect(useListaStore.getState().listaAtiva?.orcamento).toBeUndefined();
+
+    const anterior = useListaStore.getState().listaAtiva!;
+    useListaStore.getState().entrarNaFamilia({ id: 'n', nome: 'Outra', criadaEm: 1, itens: [] }, { ...anterior, finalizadaEm: 2 });
+    expect(useListaStore.getState().listaAtiva?.nome).toBe('Outra');
+    expect(useListaStore.getState().historico[0].nome).toBe('Casa da vó');
+  });
+
+  it('Família: concluir a compra mantém a lista da família; conclusão de outro celular arquiva a cópia daqui', () => {
+    const s = useListaStore.getState();
+    s.novaLista('Casa', false);
+    const arroz = s.adicionarItem('arroz')!.item;
+    useListaStore.getState().adicionarItem('café');
+    useListaStore.getState().definirCompartilhada({ id: 'r1', codigo: 'AB3K7Q' });
+    useListaStore.getState().definirPego(arroz.id, true);
+
+    useListaStore.getState().finalizarCompra(true);
+    let st = useListaStore.getState();
+    expect(st.historico[0].compartilhada).toBeUndefined();
+    expect(st.listaAtiva?.compartilhada?.id).toBe('r1');
+    expect(st.listaAtiva?.compartilhada?.ultimaConclusao).toBeGreaterThan(0);
+    expect(st.listaAtiva?.itens.map((i) => i.nome)).toEqual(['Café']);
+
+    // Outra pessoa conclui depois.
+    const em = (st.listaAtiva?.compartilhada?.ultimaConclusao ?? 0) + 1000;
+    useListaStore.getState().concluidaEmOutroCelular('r1', em, []);
+    st = useListaStore.getState();
+    expect(st.historico).toHaveLength(2);
+    expect(st.listaAtiva).toMatchObject({ itens: [], compartilhada: { id: 'r1', ultimaConclusao: em } });
+
+    // Nova lista numa lista da família continua da família, com o nome novo.
+    useListaStore.getState().novaLista('Churrasco', false);
+    expect(useListaStore.getState().listaAtiva).toMatchObject({ nome: 'Churrasco', compartilhada: { id: 'r1' } });
+    expect(useListaStore.getState().historico).toHaveLength(2); // lista vazia não vai para o histórico
+  });
+
   it('lembra a categoria escolhida na edição para a próxima vez que o item entrar', async () => {
     const s = useListaStore.getState();
     s.novaLista('Churrasco', false);

@@ -53,6 +53,15 @@ export type Lista = {
   finalizadaEm?: number;
   /** Limite de gasto desta compra, em reais (Fase 2, opcional). */
   orcamento?: number;
+  /** Fase 3: lista dividida com a família no Supabase (id remoto e código de convite). */
+  compartilhada?: ListaCompartilhada;
+};
+
+export type ListaCompartilhada = {
+  id: string;
+  codigo: string;
+  /** Quando a família concluiu a última compra desta lista (ms); serve para cada celular arquivar a sua cópia. */
+  ultimaConclusao?: number;
 };
 
 export type HistoricoItem = {

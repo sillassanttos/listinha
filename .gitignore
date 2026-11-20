@@ -42,3 +42,6 @@ yarn-error.*
 
 # material local (regras do D:)
 local/
+
+# Supabase (Fase 3): URL e chave pública ficam só no PC (modelo em .env.example)
+.env

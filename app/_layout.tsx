@@ -4,10 +4,13 @@ import { ActivityIndicator, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useHidratado } from '@/store/useHidratado';
+import { useSincronizacao } from '@/sync/sincronizador';
 import { cores, fonte } from '@/theme';
 
 export default function RootLayout() {
   const hidratado = useHidratado();
+  // Fase 3: liga a sincronização da lista compartilhada (quando houver login e lista da família).
+  useSincronizacao();
 
   if (!hidratado) {
     // Carregando os dados salvos (leva milissegundos); evita mostrar "nenhuma lista" por engano.
@@ -41,6 +44,8 @@ export default function RootLayout() {
         <Stack.Screen name="despensa" options={{ title: 'Despensa' }} />
         <Stack.Screen name="historico" options={{ title: 'Histórico' }} />
         <Stack.Screen name="configuracoes" options={{ title: 'Configurações' }} />
+        <Stack.Screen name="conta" options={{ title: 'Conta' }} />
+        <Stack.Screen name="familia" options={{ title: 'Família' }} />
       </Stack>
     </GestureHandlerRootView>
   );
