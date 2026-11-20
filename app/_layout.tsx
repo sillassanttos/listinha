@@ -39,6 +39,7 @@ export default function RootLayout() {
         <Stack.Screen name="lista/[id]" options={{ title: 'Lista' }} />
         <Stack.Screen name="item/[id]" options={{ title: 'Editar item', presentation: 'modal' }} />
         <Stack.Screen name="importar" options={{ title: 'Importar do WhatsApp', presentation: 'modal' }} />
+        <Stack.Screen name="escanear" options={{ title: 'Ler código de barras', presentation: 'modal' }} />
         <Stack.Screen name="mercado/[id]" options={{ title: 'Modo Mercado' }} />
         <Stack.Screen name="concluida/[id]" options={{ title: 'Compra concluída' }} />
         <Stack.Screen name="despensa" options={{ title: 'Despensa' }} />

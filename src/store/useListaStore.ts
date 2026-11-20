@@ -7,6 +7,8 @@ import { gerarHistoricoExemplo } from '@/data/exemplo';
 import type { CategoriaId, ItemLista, Lista, ListaCompartilhada, Unidade } from '@/types';
 import { arquivarConclusaoRemota, concluirCompartilhada } from '@/sync/regras';
 import { type CategoriasManuais, lembrarCategoria } from '@/utils/categoriasManuais';
+import type { ProdutoLembrado } from '@/utils/codigoBarras';
+import { chaveImagem } from '@/utils/imagens';
 import {
   adicionarImportados,
   adicionarNaLista,
@@ -49,6 +51,11 @@ type ListaState = {
   restaurarOrdemCategorias: () => void;
   /** Fase 2: categoria escolhida à mão por item; vale para as próximas vezes que ele entrar na lista. */
   categoriasManuais: CategoriasManuais;
+  /** Fase 3: produtos lidos pelo código de barras (nome e foto), para não consultar de novo. */
+  produtosPorCodigo: Record<string, ProdutoLembrado>;
+  lembrarProdutoPorCodigo: (codigo: string, produto: ProdutoLembrado) => void;
+  /** Fase 3: adiciona o produto lido na lista ativa (cria a lista se não houver) e guarda a foto. */
+  adicionarProdutoLido: (produto: ProdutoLembrado) => ResultadoAdicionar | null;
   esquecerCategoriasManuais: () => void;
   /** Mensagem para a tela Lista mostrar ao voltar de outra tela (não é salva). */
   avisoPendente: string | null;
@@ -105,6 +112,16 @@ export const useListaStore = create<ListaState>()(
       restaurarOrdemCategorias: () => set({ ordemCategorias: ORDEM_CATEGORIAS }),
       categoriasManuais: {},
       esquecerCategoriasManuais: () => set({ categoriasManuais: {} }),
+      produtosPorCodigo: {},
+      lembrarProdutoPorCodigo: (codigo, produto) =>
+        set((s) => ({ produtosPorCodigo: { ...s.produtosPorCodigo, [codigo]: produto } })),
+      adicionarProdutoLido: (produto) => {
+        if (!get().listaAtiva) get().novaLista('Compra da semana', false);
+        const resultado = get().adicionarItem(produto.nome);
+        // A foto do produto vira a foto do item (mesmo cache das fotos online).
+        if (resultado && produto.imagem) get().definirImagem(chaveImagem(resultado.item.nome), produto.imagem);
+        return resultado;
+      },
       avisoPendente: null,
       definirAvisoPendente: (mensagem) => set({ avisoPendente: mensagem }),
       novaLista: (nome, levarPendentes) =>
@@ -219,7 +236,7 @@ export const useListaStore = create<ListaState>()(
         }),
       limparDados: async () => {
         await useListaStore.persist.clearStorage();
-        set({ listaAtiva: null, historico: [], imagens: {}, categoriasManuais: {} });
+        set({ listaAtiva: null, historico: [], imagens: {}, categoriasManuais: {}, produtosPorCodigo: {} });
       },
     }),
     {
@@ -233,6 +250,7 @@ export const useListaStore = create<ListaState>()(
         imagensOnline: s.imagensOnline,
         ordemCategorias: s.ordemCategorias,
         categoriasManuais: s.categoriasManuais,
+        produtosPorCodigo: s.produtosPorCodigo,
       }),
       // Dados salvos passam sempre pela limpeza: nada corrompido chega às telas.
       migrate: (salvo, versao) => migrarDados(salvo, versao),

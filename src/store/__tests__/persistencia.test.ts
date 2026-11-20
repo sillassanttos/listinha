@@ -8,7 +8,7 @@ import { sanearDados } from '../persistencia';
 describe('sanearDados', () => {
   it('lixo ou vazio vira estado inicial', () => {
     for (const lixo of [null, undefined, 42, 'texto', [], {}]) {
-      expect(sanearDados(lixo)).toEqual({ listaAtiva: null, historico: [], imagens: {}, imagensOnline: true, ordemCategorias: ORDEM_CATEGORIAS, categoriasManuais: {} });
+      expect(sanearDados(lixo)).toEqual({ listaAtiva: null, historico: [], imagens: {}, imagensOnline: true, ordemCategorias: ORDEM_CATEGORIAS, categoriasManuais: {}, produtosPorCodigo: {} });
     }
   });
 
@@ -36,7 +36,7 @@ describe('sanearDados', () => {
       listaAtiva: { id: 'a', nome: 'Semana', criadaEm: 1, itens: [item] },
       historico: [{ id: 'h', nome: 'Antiga', criadaEm: 0, finalizadaEm: 2, itens: [] }],
     };
-    expect(sanearDados(JSON.parse(JSON.stringify(dados)))).toEqual({ ...dados, imagens: {}, imagensOnline: true, ordemCategorias: ORDEM_CATEGORIAS, categoriasManuais: {} });
+    expect(sanearDados(JSON.parse(JSON.stringify(dados)))).toEqual({ ...dados, imagens: {}, imagensOnline: true, ordemCategorias: ORDEM_CATEGORIAS, categoriasManuais: {}, produtosPorCodigo: {} });
   });
 
   it('corrige campos inválidos e descarta itens sem id ou nome', () => {

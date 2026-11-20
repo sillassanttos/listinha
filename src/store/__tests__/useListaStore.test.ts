@@ -46,6 +46,7 @@ describe('persistência do store (fechar e abrir o app mantém tudo)', () => {
       'imagensOnline',
       'listaAtiva',
       'ordemCategorias',
+      'produtosPorCodigo',
     ]);
   });
 
@@ -114,6 +115,21 @@ describe('persistência do store (fechar e abrir o app mantém tudo)', () => {
     useListaStore.getState().novaLista('Churrasco', false);
     expect(useListaStore.getState().listaAtiva).toMatchObject({ nome: 'Churrasco', compartilhada: { id: 'r1' } });
     expect(useListaStore.getState().historico).toHaveLength(2); // lista vazia não vai para o histórico
+  });
+
+  it('Código de barras: produto lido entra na lista com a foto e fica lembrado', async () => {
+    expect(useListaStore.getState().listaAtiva).toBeNull();
+    const produto = { nome: 'Leite Condensado Integral moça', imagem: 'https://img/moca.jpg' };
+    const r = useListaStore.getState().adicionarProdutoLido(produto)!;
+    expect(r.tipo).toBe('novo');
+    expect(useListaStore.getState().listaAtiva?.itens.map((i) => i.nome)).toEqual(['Leite Condensado Integral moça']);
+    expect(Object.values(useListaStore.getState().imagens).map((i) => i.uri)).toEqual(['https://img/moca.jpg']);
+    // Ler de novo soma em vez de duplicar.
+    expect(useListaStore.getState().adicionarProdutoLido(produto)?.tipo).toBe('somado');
+
+    useListaStore.getState().lembrarProdutoPorCodigo('7891000100103', produto);
+    await esperar();
+    expect((await lerSalvo()).state.produtosPorCodigo).toEqual({ '7891000100103': produto });
   });
 
   it('lembra a categoria escolhida na edição para a próxima vez que o item entrar', async () => {
