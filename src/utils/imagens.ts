@@ -8,7 +8,7 @@ import { chaveBusca, normalizar } from './normalizar';
 // cache de disco do expo-image) e o emoji continua aparecendo quando não há foto ou sinal.
 
 const URL_BUSCA = 'https://search.openfoodfacts.org/search';
-const AGENTE = 'Listinha/1.0 (app pessoal de lista de compras)';
+export const AGENTE = 'Listinha/1.0 (app pessoal de lista de compras)';
 const TEMPO_LIMITE_MS = 8000;
 
 /** Depois de quanto tempo vale procurar de novo um item que não teve foto. */

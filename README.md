@@ -26,6 +26,7 @@ O documento do projeto, com fases, telas e modelo de dados, é o [LISTINHA.md](L
 ## Fase 3 — Recursos avançados (em andamento)
 
 - **Lista compartilhada em tempo real** com a família (Supabase, login por código no e-mail). Veja abaixo.
+- **Leitor de código de barras:** na Lista, "Ler código de barras" abre a câmera; o nome e a foto vêm do Open Food Facts. Código desconhecido: digite o nome uma vez e o app lembra.
 
 ## Como rodar no celular
 

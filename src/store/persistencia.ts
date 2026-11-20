@@ -1,6 +1,7 @@
 import { CATEGORIAS, obterCategoria, sanearOrdemCategorias } from '@/data/categorias';
 import type { CategoriaId, ItemLista, Lista, ListaCompartilhada, Unidade } from '@/types';
 import { type CategoriasManuais, sanearCategoriasManuais } from '@/utils/categoriasManuais';
+import { type ProdutoLembrado, sanearProdutosPorCodigo } from '@/utils/codigoBarras';
 import { UNIDADES, passoDaUnidade } from '@/utils/quantidade';
 
 // Leitura segura do que está salvo no celular (AsyncStorage).
@@ -23,6 +24,8 @@ export type DadosSalvos = {
   ordemCategorias: CategoriaId[];
   /** Categoria escolhida à mão por item (chave de busca do nome -> categoria). */
   categoriasManuais: CategoriasManuais;
+  /** Fase 3: nome e foto por código de barras (lidos da internet ou digitados pelo usuário). */
+  produtosPorCodigo: Record<string, ProdutoLembrado>;
 };
 
 function sanearImagens(v: unknown): Record<string, ImagemSalva> {
@@ -94,6 +97,7 @@ export function sanearDados(salvo: unknown): DadosSalvos {
     return { listaAtiva: null, historico: [], imagens: {}, imagensOnline: true,
       ordemCategorias: sanearOrdemCategorias(undefined),
       categoriasManuais: {},
+      produtosPorCodigo: {},
     };
   }
   const ativa = sanearLista(salvo.listaAtiva);
@@ -108,6 +112,7 @@ export function sanearDados(salvo: unknown): DadosSalvos {
     imagensOnline: salvo.imagensOnline !== false, // ligado por padrão
     ordemCategorias: sanearOrdemCategorias(salvo.ordemCategorias),
     categoriasManuais: sanearCategoriasManuais(salvo.categoriasManuais),
+    produtosPorCodigo: sanearProdutosPorCodigo(salvo.produtosPorCodigo),
   };
 }
 

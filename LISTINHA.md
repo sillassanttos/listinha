@@ -223,7 +223,7 @@ type HistoricoItem = {    // usado para sugestões por frequência (Fase 2)
 
 ### 🌟 Fase 3 — Recursos avançados
 - [x] **Lista compartilhada em tempo real** com a família (backend gratuito: Supabase ou Firebase), com login simples
-- [ ] **Leitor de código de barras** (expo-camera) + Open Food Facts para preencher nome e foto
+- [x] **Leitor de código de barras** (expo-camera) + Open Food Facts para preencher nome e foto
 - [ ] **Histórico de preços** e gráfico de variação por produto
 - [ ] Várias listas simultâneas (ex.: mercado, farmácia, feira)
 - [ ] Modo escuro

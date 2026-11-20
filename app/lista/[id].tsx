@@ -228,15 +228,27 @@ export default function ListaTela() {
             </ScrollView>
           )}
           {!texto.trim() && (
-            <Pressable
-              onPress={() => router.push('/importar')}
-              accessibilityRole="button"
-              hitSlop={6}
-              style={({ pressed }) => [styles.linkImportar, pressed && { opacity: 0.6 }]}
-            >
-              <Ionicons name="clipboard-outline" size={18} color={cores.primariaEscura} />
-              <Text style={styles.linkImportarTexto}>Colar lista do WhatsApp</Text>
-            </Pressable>
+            <View style={styles.linhaLinks}>
+              <Pressable
+                onPress={() => router.push('/importar')}
+                accessibilityRole="button"
+                hitSlop={6}
+                style={({ pressed }) => [styles.linkImportar, pressed && { opacity: 0.6 }]}
+              >
+                <Ionicons name="clipboard-outline" size={18} color={cores.primariaEscura} />
+                <Text style={styles.linkImportarTexto}>Colar do WhatsApp</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => router.push('/escanear')}
+                accessibilityRole="button"
+                accessibilityLabel="Ler código de barras com a câmera"
+                hitSlop={6}
+                style={({ pressed }) => [styles.linkImportar, pressed && { opacity: 0.6 }]}
+              >
+                <Ionicons name="barcode-outline" size={18} color={cores.primariaEscura} />
+                <Text style={styles.linkImportarTexto}>Ler código de barras</Text>
+              </Pressable>
+            </View>
           )}
         </View>
       )}
@@ -313,6 +325,7 @@ const styles = StyleSheet.create({
   topo: { paddingHorizontal: espaco.lg, paddingTop: espaco.md, gap: espaco.md },
   chips: { gap: espaco.sm, paddingRight: espaco.lg },
   grupoChips: { gap: espaco.xs },
+  linhaLinks: { flexDirection: 'row', flexWrap: 'wrap', columnGap: espaco.lg },
   linkImportar: { flexDirection: 'row', alignItems: 'center', gap: espaco.xs, alignSelf: 'flex-start', paddingVertical: espaco.xs },
   linkImportarTexto: { fontSize: fonte.tamanho.pequeno, fontWeight: fonte.peso.negrito, color: cores.primariaEscura },
   rotuloChips: { fontSize: fonte.tamanho.pequeno, fontWeight: fonte.peso.negrito, color: cores.textoSecundario },
