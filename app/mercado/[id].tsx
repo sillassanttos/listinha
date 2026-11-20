@@ -10,6 +10,7 @@ import { CategoriaHeader } from '@/components/CategoriaHeader';
 import { ItemMercado } from '@/components/ItemMercado';
 import { ModalOrcamento } from '@/components/ModalOrcamento';
 import { ModalPreco } from '@/components/ModalPreco';
+import { SeloFamilia } from '@/components/SeloFamilia';
 import { useBuscarImagens } from '@/store/useBuscarImagens';
 import { useListaStore } from '@/store/useListaStore';
 import { cores, duracaoAnimacao, espaco, fonte, raio } from '@/theme';
@@ -127,6 +128,7 @@ export default function MercadoTela() {
       />
 
       <View style={styles.painel}>
+        {lista.compartilhada && <SeloFamilia />}
         <Text style={styles.faltam} accessibilityLiveRegion="polite">
           {progresso.total === 0
             ? 'Lista vazia'

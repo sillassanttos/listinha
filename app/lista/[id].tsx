@@ -10,6 +10,7 @@ import { ChipSugestao } from '@/components/ChipSugestao';
 import { ItemCard } from '@/components/ItemCard';
 import { ItemDeslizavel } from '@/components/ItemDeslizavel';
 import { ModalUnidade } from '@/components/ModalUnidade';
+import { SeloFamilia } from '@/components/SeloFamilia';
 import { useBuscarImagens } from '@/store/useBuscarImagens';
 import { useListaStore } from '@/store/useListaStore';
 import { cores, espaco, fonte } from '@/theme';
@@ -155,6 +156,20 @@ export default function ListaTela() {
               </Pressable>
               {ehAtiva && (
                 <Pressable
+                  onPress={() => router.push('/familia')}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel="Dividir com a família"
+                >
+                  <Ionicons
+                    name={lista.compartilhada ? 'people' : 'people-outline'}
+                    size={25}
+                    color={cores.primariaEscura}
+                  />
+                </Pressable>
+              )}
+              {ehAtiva && (
+                <Pressable
                   onPress={() => router.push({ pathname: '/mercado/[id]', params: { id: lista.id } })}
                   hitSlop={10}
                   accessibilityRole="button"
@@ -170,6 +185,7 @@ export default function ListaTela() {
 
       {ehAtiva && (
         <View style={styles.topo}>
+          {lista.compartilhada && <SeloFamilia />}
           <CampoAdicionar
             ref={campoRef}
             texto={texto}
@@ -292,7 +308,7 @@ export default function ListaTela() {
 
 const styles = StyleSheet.create({
   tela: { flex: 1 },
-  acoesTopo: { flexDirection: 'row', alignItems: 'center', gap: espaco.xl },
+  acoesTopo: { flexDirection: 'row', alignItems: 'center', gap: espaco.lg },
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: espaco.xl },
   topo: { paddingHorizontal: espaco.lg, paddingTop: espaco.md, gap: espaco.md },
   chips: { gap: espaco.sm, paddingRight: espaco.lg },

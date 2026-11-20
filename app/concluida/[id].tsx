@@ -76,6 +76,13 @@ export default function CompraConcluidaTela() {
         </View>
       )}
 
+      {lista.compartilhada && (
+        <Text style={styles.ajuda}>
+          👨‍👩‍👧 Lista da família: finalizar vale para todo mundo. A compra vai para o histórico de cada um e a lista
+          da família continua, com o mesmo código, só com o que você levar.
+        </Text>
+      )}
+
       <View style={styles.botoes}>
         {pendentes.length > 0 ? (
           <>

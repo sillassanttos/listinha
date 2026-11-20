@@ -4,7 +4,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { ORDEM_CATEGORIAS, moverCategoria } from '@/data/categorias';
 import { gerarHistoricoExemplo } from '@/data/exemplo';
-import type { CategoriaId, Lista, Unidade } from '@/types';
+import type { CategoriaId, ItemLista, Lista, ListaCompartilhada, Unidade } from '@/types';
+import { arquivarConclusaoRemota, concluirCompartilhada } from '@/sync/regras';
 import { type CategoriasManuais, lembrarCategoria } from '@/utils/categoriasManuais';
 import {
   adicionarImportados,
@@ -78,6 +79,14 @@ type ListaState = {
   importarItens: (itens: ItemParaImportar[]) => ResultadoRepetir;
   /** Só para testes no Expo Go: acrescenta compras de exemplo ao histórico (ordem por data). */
   carregarHistoricoExemplo: () => void;
+  /** Fase 3: marca a lista ativa como compartilhada (ou deixa de ser, com undefined). */
+  definirCompartilhada: (info: ListaCompartilhada | undefined) => void;
+  /** Fase 3: troca a lista ativa pela da família (a anterior pode ir para o histórico). */
+  entrarNaFamilia: (novaLista: Lista, finalizada?: Lista) => void;
+  /** Fase 3: aplica o que veio do servidor na lista compartilhada (só se ainda for a mesma). */
+  aplicarRemoto: (remotoId: string, mudanca: { itens?: ItemLista[]; nome?: string; orcamento?: number | null }) => void;
+  /** Fase 3: outra pessoa concluiu a compra da lista da família; arquiva a cópia daqui. */
+  concluidaEmOutroCelular: (remotoId: string, em: number, itensProxima?: ItemLista[]) => void;
   /** Configurações: apaga a lista ativa e o histórico (no celular também). */
   limparDados: () => Promise<void>;
 };
@@ -100,6 +109,12 @@ export const useListaStore = create<ListaState>()(
       definirAvisoPendente: (mensagem) => set({ avisoPendente: mensagem }),
       novaLista: (nome, levarPendentes) =>
         set((s) => {
+          // Lista da família: a nova continua da família (vale para todos, ver concluirCompartilhada).
+          if (s.listaAtiva?.compartilhada) {
+            const r = concluirCompartilhada(s.listaAtiva, levarPendentes, Date.now(), nome);
+            const guardar = s.listaAtiva.itens.length > 0;
+            return { listaAtiva: r.proxima, historico: guardar ? [r.finalizada, ...s.historico] : s.historico };
+          }
           const { novaLista, finalizada } = iniciarNovaLista(s.listaAtiva, nome, levarPendentes);
           return { listaAtiva: novaLista, historico: finalizada ? [finalizada, ...s.historico] : s.historico };
         }),
@@ -147,6 +162,10 @@ export const useListaStore = create<ListaState>()(
       finalizarCompra: (levarPendentes) =>
         set((s) => {
           if (!s.listaAtiva) return s;
+          if (s.listaAtiva.compartilhada) {
+            const r = concluirCompartilhada(s.listaAtiva, levarPendentes);
+            return { listaAtiva: r.proxima, historico: [r.finalizada, ...s.historico] };
+          }
           const { finalizada, proxima } = finalizarLista(s.listaAtiva, levarPendentes);
           return { listaAtiva: proxima, historico: [finalizada, ...s.historico] };
         }),
@@ -170,6 +189,34 @@ export const useListaStore = create<ListaState>()(
             (a, b) => (b.finalizadaEm ?? b.criadaEm) - (a.finalizadaEm ?? a.criadaEm),
           ),
         })),
+      definirCompartilhada: (info) =>
+        set((s) => (s.listaAtiva ? { listaAtiva: { ...s.listaAtiva, compartilhada: info } } : s)),
+      entrarNaFamilia: (novaLista, finalizada) =>
+        set((s) => ({ listaAtiva: novaLista, historico: finalizada ? [finalizada, ...s.historico] : s.historico })),
+      aplicarRemoto: (remotoId, mudanca) =>
+        set((s) => {
+          const l = s.listaAtiva;
+          if (!l || l.compartilhada?.id !== remotoId) return s;
+          return {
+            listaAtiva: {
+              ...l,
+              itens: mudanca.itens ?? l.itens,
+              nome: mudanca.nome?.trim() ? mudanca.nome : l.nome,
+              orcamento:
+                mudanca.orcamento === undefined ? l.orcamento : mudanca.orcamento && mudanca.orcamento > 0 ? mudanca.orcamento : undefined,
+            },
+          };
+        }),
+      concluidaEmOutroCelular: (remotoId, em, itensProxima) =>
+        set((s) => {
+          const l = s.listaAtiva;
+          if (!l || l.compartilhada?.id !== remotoId) return s;
+          const r = arquivarConclusaoRemota(l, em);
+          return {
+            listaAtiva: itensProxima ? { ...r.proxima, itens: itensProxima } : r.proxima,
+            historico: r.finalizada ? [r.finalizada, ...s.historico] : s.historico,
+          };
+        }),
       limparDados: async () => {
         await useListaStore.persist.clearStorage();
         set({ listaAtiva: null, historico: [], imagens: {}, categoriasManuais: {} });

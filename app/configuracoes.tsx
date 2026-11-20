@@ -64,7 +64,21 @@ export default function ConfiguracoesTela() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.secao}>Seus dados</Text>
+      <Text style={styles.secao}>Compartilhar com a família</Text>
+      <Pressable
+        onPress={() => router.push('/conta')}
+        accessibilityRole="button"
+        style={({ pressed }) => [styles.cartao, styles.linhaConta, pressed && { opacity: 0.7 }]}
+      >
+        <Text style={{ fontSize: 24 }}>☁️</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.textoDados}>Conta</Text>
+          <Text style={styles.ajuda}>Entrar com o e-mail (sem senha) para dividir a lista.</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={cores.textoSuave} />
+      </Pressable>
+
+      <Text style={[styles.secao, { marginTop: espaco.lg }]}>Seus dados</Text>
       <View style={styles.cartao}>
         <Text style={styles.textoDados}>
           {temDados
@@ -201,6 +215,7 @@ const styles = StyleSheet.create({
   container: { padding: espaco.lg, gap: espaco.sm },
   secao: { fontSize: fonte.tamanho.medio, fontWeight: fonte.peso.negrito, color: cores.texto },
   ajuda: { fontSize: fonte.tamanho.pequeno, color: cores.textoSecundario, marginBottom: espaco.sm },
+  linhaConta: { flexDirection: 'row', alignItems: 'center', gap: espaco.md },
   cartao: { backgroundColor: cores.superficie, borderRadius: raio.lg, padding: espaco.lg, gap: espaco.sm },
   textoDados: { fontSize: fonte.tamanho.normal, color: cores.texto },
   linhaSwitch: { flexDirection: 'row', alignItems: 'center', gap: espaco.md },

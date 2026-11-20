@@ -7,6 +7,7 @@ import { Botao } from '@/components/Botao';
 import { CartaoLembretes } from '@/components/CartaoLembretes';
 import { CartaoListaAtiva } from '@/components/CartaoListaAtiva';
 import { ModalNovaLista } from '@/components/ModalNovaLista';
+import { supabase } from '@/lib/supabase';
 import { useListaStore } from '@/store/useListaStore';
 import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
 import { formatarDataAmigavel } from '@/utils/datas';
@@ -23,6 +24,7 @@ export default function Inicio() {
   const repetirUltimaCompra = useListaStore((s) => s.repetirUltimaCompra);
   const historico = useListaStore((s) => s.historico);
   const adicionarItem = useListaStore((s) => s.adicionarItem);
+  const definirCompartilhada = useListaStore((s) => s.definirCompartilhada);
 
   // Fase 2: até 3 itens que já passaram do intervalo de costume e não estão na lista.
   const lembretes = useMemo(
@@ -55,6 +57,33 @@ export default function Inicio() {
   }
 
   function pedirNovaLista() {
+    // Fase 3: numa lista da família, a lista nova vale para todos (ou a pessoa sai da família antes).
+    const familia = listaAtiva?.compartilhada;
+    if (familia) {
+      Alert.alert(
+        'Esta lista é da família',
+        'Uma lista nova vale para todo mundo: a atual vai para o histórico de cada um e a família continua com o mesmo código. Se quiser uma lista só sua, saia da família antes.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Sair da família',
+            onPress: async () => {
+              // Melhor esforço: sem sinal, sai só deste celular (a família continua sem você).
+              await supabase?.rpc('sair_da_lista', { p_lista: familia.id });
+              definirCompartilhada(undefined);
+              fluxoNovaLista();
+            },
+          },
+          { text: 'Nova para todos', onPress: fluxoNovaLista },
+        ],
+      );
+      return;
+    }
+    fluxoNovaLista();
+  }
+
+  function fluxoNovaLista() {
+    const listaAtiva = useListaStore.getState().listaAtiva;
     // Lista atual vazia (ou nenhuma): não há o que finalizar.
     if (!listaAtiva || listaAtiva.itens.length === 0) {
       setModal({ levarPendentes: false });
@@ -143,6 +172,22 @@ export default function Inicio() {
             </View>
           </Pressable>
         )}
+
+        <Pressable
+          onPress={() => router.push('/familia')}
+          accessibilityRole="button"
+          accessibilityLabel="Família: dividir a lista"
+          style={({ pressed }) => [styles.linhaHistorico, pressed && { opacity: 0.7 }]}
+        >
+          <Text style={styles.linhaEmoji}>👨‍👩‍👧</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.linhaTexto}>Família</Text>
+            <Text style={styles.contador}>
+              {listaAtiva?.compartilhada ? 'Lista dividida · código ' + listaAtiva.compartilhada.codigo : 'Divida a lista ou entre com um código'}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={cores.textoSuave} />
+        </Pressable>
 
         <Pressable
           onPress={() => router.push('/despensa')}

@@ -1,5 +1,5 @@
 import { CATEGORIAS, obterCategoria, sanearOrdemCategorias } from '@/data/categorias';
-import type { CategoriaId, ItemLista, Lista, Unidade } from '@/types';
+import type { CategoriaId, ItemLista, Lista, ListaCompartilhada, Unidade } from '@/types';
 import { type CategoriasManuais, sanearCategoriasManuais } from '@/utils/categoriasManuais';
 import { UNIDADES, passoDaUnidade } from '@/utils/quantidade';
 
@@ -46,7 +46,7 @@ function numeroOu(v: unknown, padrao: number): number {
   return typeof v === 'number' && Number.isFinite(v) ? v : padrao;
 }
 
-function sanearItem(v: unknown): ItemLista | null {
+export function sanearItem(v: unknown): ItemLista | null {
   if (!ehObjeto(v) || typeof v.id !== 'string' || typeof v.nome !== 'string' || !v.nome.trim()) return null;
   const categoria: CategoriaId = typeof v.categoria === 'string' && v.categoria in CATEGORIAS ? (v.categoria as CategoriaId) : 'outros';
   const unidade: Unidade = typeof v.unidade === 'string' && UNIDADES_VALIDAS.has(v.unidade) ? (v.unidade as Unidade) : 'un';
@@ -78,7 +78,14 @@ function sanearLista(v: unknown): Lista | null {
     criadaEm: numeroOu(v.criadaEm, 0),
     finalizadaEm: typeof v.finalizadaEm === 'number' ? v.finalizadaEm : undefined,
     orcamento: typeof v.orcamento === 'number' && Number.isFinite(v.orcamento) && v.orcamento > 0 ? v.orcamento : undefined,
+    compartilhada: sanearCompartilhada(v.compartilhada),
   };
+}
+
+function sanearCompartilhada(v: unknown): ListaCompartilhada | undefined {
+  if (!ehObjeto(v) || typeof v.id !== 'string' || !v.id || typeof v.codigo !== 'string' || !v.codigo) return undefined;
+  const ultimaConclusao = typeof v.ultimaConclusao === 'number' && v.ultimaConclusao > 0 ? v.ultimaConclusao : undefined;
+  return { id: v.id, codigo: v.codigo, ultimaConclusao };
 }
 
 /** Converte o que veio do armazenamento (qualquer coisa) em dados válidos para o app. */
