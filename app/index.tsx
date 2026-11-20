@@ -7,16 +7,16 @@ import { Botao } from '@/components/Botao';
 import { CartaoLembretes } from '@/components/CartaoLembretes';
 import { CartaoListaAtiva } from '@/components/CartaoListaAtiva';
 import { ModalNovaLista } from '@/components/ModalNovaLista';
-import { supabase } from '@/lib/supabase';
 import { useListaStore } from '@/store/useListaStore';
 import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
 import { formatarDataAmigavel } from '@/utils/datas';
 import { sugestoesPorFrequencia } from '@/utils/frequencia';
-import { calcularProgresso } from '@/utils/lista';
 
-// Tela Início (seção 8.1): lista ativa em destaque, nova lista, repetir a última compra
-// (Fase 2), despensa ("Acabou", Fase 2) e acesso ao histórico.
+// Tela Início (seção 8.1): as listas abertas (Fase 3: várias ao mesmo tempo), nova lista, repetir a
+// última compra (Fase 2), lembretes, família, preços, despensa e histórico.
+// O que entra daqui (lembretes, repetir) vai para a lista atual (a aberta por último).
 export default function Inicio() {
+  const listas = useListaStore((s) => s.listas);
   const listaAtiva = useListaStore((s) => s.listaAtiva);
   const totalHistorico = useListaStore((s) => s.historico.length);
   const novaLista = useListaStore((s) => s.novaLista);
@@ -24,20 +24,19 @@ export default function Inicio() {
   const repetirUltimaCompra = useListaStore((s) => s.repetirUltimaCompra);
   const historico = useListaStore((s) => s.historico);
   const adicionarItem = useListaStore((s) => s.adicionarItem);
-  const definirCompartilhada = useListaStore((s) => s.definirCompartilhada);
 
-  // Fase 2: até 3 itens que já passaram do intervalo de costume e não estão na lista.
+  // Fase 2: até 3 itens que já passaram do intervalo de costume e não estão na lista atual.
   const lembretes = useMemo(
     () => sugestoesPorFrequencia(historico, listaAtiva).filter((f) => f.atrasado).slice(0, 3),
     [historico, listaAtiva],
   );
 
   function adicionarLembrete(nome: string) {
-    if (!useListaStore.getState().listaAtiva) novaLista('Compra da semana', false);
+    if (!useListaStore.getState().listaAtiva) novaLista('Compra da semana');
     adicionarItem(nome);
   }
 
-  const [modal, setModal] = useState<{ levarPendentes: boolean; aviso?: string } | null>(null);
+  const [modalAberto, setModalAberto] = useState(false);
 
   function abrirLista(id: string, aviso?: string) {
     router.push({ pathname: '/lista/[id]', params: aviso ? { id, aviso } : { id } });
@@ -47,7 +46,7 @@ export default function Inicio() {
     const r = repetirUltimaCompra();
     if (!r) return;
     if (r.adicionados === 0) {
-      Alert.alert('Já está tudo aí 👍', 'Todos os itens da última compra já estão na sua lista.');
+      Alert.alert('Já está tudo aí 👍', `Todos os itens da última compra já estão em "${r.lista.nome}".`);
       return;
     }
     const aviso =
@@ -56,69 +55,11 @@ export default function Inicio() {
     abrirLista(r.lista.id, aviso);
   }
 
-  function pedirNovaLista() {
-    // Fase 3: numa lista da família, a lista nova vale para todos (ou a pessoa sai da família antes).
-    const familia = listaAtiva?.compartilhada;
-    if (familia) {
-      Alert.alert(
-        'Esta lista é da família',
-        'Uma lista nova vale para todo mundo: a atual vai para o histórico de cada um e a família continua com o mesmo código. Se quiser uma lista só sua, saia da família antes.',
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          {
-            text: 'Sair da família',
-            onPress: async () => {
-              // Melhor esforço: sem sinal, sai só deste celular (a família continua sem você).
-              await supabase?.rpc('sair_da_lista', { p_lista: familia.id });
-              definirCompartilhada(undefined);
-              fluxoNovaLista();
-            },
-          },
-          { text: 'Nova para todos', onPress: fluxoNovaLista },
-        ],
-      );
-      return;
-    }
-    fluxoNovaLista();
-  }
-
-  function fluxoNovaLista() {
-    const listaAtiva = useListaStore.getState().listaAtiva;
-    // Lista atual vazia (ou nenhuma): não há o que finalizar.
-    if (!listaAtiva || listaAtiva.itens.length === 0) {
-      setModal({ levarPendentes: false });
-      return;
-    }
-
-    const { faltam } = calcularProgresso(listaAtiva);
-    const aviso = `"${listaAtiva.nome}" vai para o histórico.`;
-    const cancelar = { text: 'Cancelar', style: 'cancel' as const };
-
-    if (faltam === 0) {
-      Alert.alert('Começar uma nova lista?', aviso, [cancelar, { text: 'Começar', onPress: () => setModal({ levarPendentes: false, aviso }) }]);
-      return;
-    }
-
-    Alert.alert(
-      'Começar uma nova lista?',
-      `${aviso} ${faltam === 1 ? 'Ficou 1 item sem pegar' : `Ficaram ${faltam} itens sem pegar`}. Quer levá-${faltam === 1 ? 'lo' : 'los'} para a nova lista?`,
-      [
-        cancelar,
-        { text: 'Não, do zero', onPress: () => setModal({ levarPendentes: false, aviso }) },
-        {
-          text: 'Sim, levar',
-          onPress: () => setModal({ levarPendentes: true, aviso: `${aviso} ${faltam} ${faltam === 1 ? 'item vai' : 'itens vão'} junto.` }),
-        },
-      ],
-    );
-  }
-
+  // Várias listas: a nova entra ao lado das outras, que continuam abertas.
   function criar(nome: string) {
-    if (!modal) return;
-    novaLista(nome, modal.levarPendentes);
-    setModal(null);
-    const nova = useListaStore.getState().listaAtiva;
-    if (nova) abrirLista(nova.id);
+    const nova = novaLista(nome);
+    setModalAberto(false);
+    abrirLista(nova.id);
   }
 
   return (
@@ -141,8 +82,9 @@ export default function Inicio() {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.saudacao}>Bora às compras? 🛒</Text>
 
-        {listaAtiva ? (
-          <CartaoListaAtiva lista={listaAtiva} onPress={() => abrirLista(listaAtiva.id)} />
+        {listas.length > 1 && <Text style={styles.secao}>Suas listas ({listas.length})</Text>}
+        {listas.length > 0 ? (
+          listas.map((l) => <CartaoListaAtiva key={l.id} lista={l} onPress={() => abrirLista(l.id)} />)
         ) : (
           <View style={styles.vazio}>
             <Text style={styles.vazioEmoji}>🧺</Text>
@@ -153,7 +95,7 @@ export default function Inicio() {
 
         <CartaoLembretes lembretes={lembretes} onAdicionar={(f) => adicionarLembrete(f.nome)} />
 
-        <Botao titulo="+ Nova lista" onPress={pedirNovaLista} />
+        <Botao titulo="+ Nova lista" onPress={() => setModalAberto(true)} />
 
         {ultimaCompra && ultimaCompra.itens.length > 0 && (
           <Pressable
@@ -168,6 +110,7 @@ export default function Inicio() {
               <Text style={styles.repetirDetalhe} numberOfLines={1}>
                 {ultimaCompra.nome} · {formatarDataAmigavel(ultimaCompra.finalizadaEm ?? ultimaCompra.criadaEm)} ·{' '}
                 {ultimaCompra.itens.length} {ultimaCompra.itens.length === 1 ? 'item' : 'itens'}
+                {listas.length > 1 && listaAtiva ? ` → ${listaAtiva.nome}` : ''}
               </Text>
             </View>
           </Pressable>
@@ -229,13 +172,14 @@ export default function Inicio() {
         </Pressable>
       </ScrollView>
 
-      <ModalNovaLista visivel={modal !== null} aviso={modal?.aviso} onCancelar={() => setModal(null)} onCriar={criar} />
+      <ModalNovaLista visivel={modalAberto} onCancelar={() => setModalAberto(false)} onCriar={criar} />
     </>
   );
 }
 
 const styles = StyleSheet.create({
   container: { padding: espaco.lg, gap: espaco.lg },
+  secao: { fontSize: fonte.tamanho.pequeno, fontWeight: fonte.peso.negrito, color: cores.textoSecundario, marginBottom: -espaco.sm },
   saudacao: { fontSize: fonte.tamanho.grande, fontWeight: fonte.peso.negrito, color: cores.texto, marginTop: espaco.sm },
   vazio: {
     alignItems: 'center',

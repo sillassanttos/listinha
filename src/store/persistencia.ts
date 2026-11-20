@@ -8,13 +8,17 @@ import { UNIDADES, passoDaUnidade } from '@/utils/quantidade';
 // Dados antigos, incompletos ou corrompidos não podem derrubar o app: o que dá para
 // aproveitar é corrigido, o que não dá é descartado.
 
-export const VERSAO_DADOS = 1;
+// Versão 2 (Fase 3, várias listas): "listaAtiva" virou "listas" + "listaAtualId".
+export const VERSAO_DADOS = 2;
 
 /** Foto encontrada (uri) ou procurada sem sucesso (null), com a data da busca. */
 export type ImagemSalva = { uri: string | null; em: number };
 
 export type DadosSalvos = {
-  listaAtiva: Lista | null;
+  /** Listas abertas (Fase 3: várias ao mesmo tempo). */
+  listas: Lista[];
+  /** A lista aberta por último (recebe o que entra de fora dela). */
+  listaAtualId: string | null;
   historico: Lista[];
   /** Cache de fotos online por nome normalizado do item (Fase 2). */
   imagens: Record<string, ImagemSalva>;
@@ -94,20 +98,32 @@ function sanearCompartilhada(v: unknown): ListaCompartilhada | undefined {
 /** Converte o que veio do armazenamento (qualquer coisa) em dados válidos para o app. */
 export function sanearDados(salvo: unknown): DadosSalvos {
   if (!ehObjeto(salvo)) {
-    return { listaAtiva: null, historico: [], imagens: {}, imagensOnline: true,
+    return { listas: [], listaAtualId: null, historico: [], imagens: {}, imagensOnline: true,
       ordemCategorias: sanearOrdemCategorias(undefined),
       categoriasManuais: {},
       produtosPorCodigo: {},
     };
   }
-  const ativa = sanearLista(salvo.listaAtiva);
+  // Aceita também o formato antigo (uma "listaAtiva"), caso chegue sem passar pela migração.
+  const brutas: unknown[] = Array.isArray(salvo.listas) ? salvo.listas : salvo.listaAtiva ? [salvo.listaAtiva] : [];
+  const ids = new Set<string>();
+  const abertas: Lista[] = [];
+  const finalizadas: Lista[] = [];
+  for (const bruta of brutas) {
+    const lista = sanearLista(bruta);
+    if (!lista || ids.has(lista.id)) continue; // lixo ou id repetido
+    ids.add(lista.id);
+    // Uma lista aberta marcada como finalizada (dado inconsistente) vai para o histórico.
+    (lista.finalizadaEm ? finalizadas : abertas).push(lista);
+  }
   const historico = Array.isArray(salvo.historico)
     ? salvo.historico.map(sanearLista).filter((l): l is Lista => l !== null)
     : [];
+  const atualId = typeof salvo.listaAtualId === 'string' ? salvo.listaAtualId : null;
   return {
-    // Uma lista ativa marcada como finalizada (dado inconsistente) vai para o histórico.
-    listaAtiva: ativa && !ativa.finalizadaEm ? ativa : null,
-    historico: ativa?.finalizadaEm ? [ativa, ...historico] : historico,
+    listas: abertas,
+    listaAtualId: abertas.some((l) => l.id === atualId) ? atualId : (abertas[0]?.id ?? null),
+    historico: [...finalizadas, ...historico],
     imagens: sanearImagens(salvo.imagens),
     imagensOnline: salvo.imagensOnline !== false, // ligado por padrão
     ordemCategorias: sanearOrdemCategorias(salvo.ordemCategorias),
@@ -117,9 +133,15 @@ export function sanearDados(salvo: unknown): DadosSalvos {
 }
 
 /**
- * Migra dados de versões anteriores para a atual. Hoje só existe a versão 1;
- * quando o formato mudar, cada passo de versão entra aqui.
+ * Migra dados de versões anteriores para a atual, passo a passo, e saneia o resultado.
+ * 1 -> 2: a única "listaAtiva" vira a primeira (e atual) das "listas".
  */
-export function migrarDados(salvo: unknown, _versao: number): DadosSalvos {
-  return sanearDados(salvo);
+export function migrarDados(salvo: unknown, versao: number): DadosSalvos {
+  let dados = salvo;
+  if (versao < 2 && ehObjeto(dados)) {
+    const { listaAtiva, ...resto } = dados;
+    const id = ehObjeto(listaAtiva) && typeof listaAtiva.id === 'string' ? listaAtiva.id : null;
+    dados = { ...resto, listas: listaAtiva ? [listaAtiva] : [], listaAtualId: id };
+  }
+  return sanearDados(dados);
 }

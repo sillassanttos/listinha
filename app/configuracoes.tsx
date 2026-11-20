@@ -16,7 +16,7 @@ const totalPorCategoria = PRODUTOS.reduce<Partial<Record<CategoriaId, number>>>(
 // Configurações: dados salvos no celular ("Limpar dados"), fotos online, testes (só no Expo Go)
 // e a ordem dos corredores (reordenar categorias com ↑/↓, Fase 2).
 export default function ConfiguracoesTela() {
-  const listaAtiva = useListaStore((s) => s.listaAtiva);
+  const listas = useListaStore((s) => s.listas);
   const historico = useListaStore((s) => s.historico);
   const limparDados = useListaStore((s) => s.limparDados);
   const carregarHistoricoExemplo = useListaStore((s) => s.carregarHistoricoExemplo);
@@ -30,8 +30,8 @@ export default function ConfiguracoesTela() {
   const esquecerCategoriasManuais = useListaStore((s) => s.esquecerCategoriasManuais);
   const ordemPersonalizada = ordemCategorias.some((id, i) => id !== ORDEM_CATEGORIAS[i]);
 
-  const totalItens = (listaAtiva?.itens.length ?? 0) + historico.reduce((n, l) => n + l.itens.length, 0);
-  const temDados = !!listaAtiva || historico.length > 0;
+  const totalItens = [...listas, ...historico].reduce((n, l) => n + l.itens.length, 0);
+  const temDados = listas.length > 0 || historico.length > 0;
 
   function confirmarEsquecer() {
     Alert.alert(
@@ -47,7 +47,7 @@ export default function ConfiguracoesTela() {
   function confirmarLimpeza() {
     Alert.alert(
       'Apagar todos os dados?',
-      'A lista ativa e todo o histórico de compras serão apagados deste celular. Não dá para desfazer.',
+      'Todas as listas abertas e todo o histórico de compras serão apagados deste celular. Não dá para desfazer.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -82,7 +82,7 @@ export default function ConfiguracoesTela() {
       <View style={styles.cartao}>
         <Text style={styles.textoDados}>
           {temDados
-            ? `${listaAtiva ? '1 lista ativa' : 'Nenhuma lista ativa'} · ${historico.length} ${
+            ? `${listas.length === 0 ? 'Nenhuma lista aberta' : listas.length === 1 ? '1 lista aberta' : `${listas.length} listas abertas`} · ${historico.length} ${
                 historico.length === 1 ? 'compra' : 'compras'
               } no histórico · ${totalItens} ${totalItens === 1 ? 'item' : 'itens'}`
             : 'Nada salvo ainda.'}

@@ -35,7 +35,7 @@ export default function MercadoTela() {
   useKeepAwake();
 
   const { id } = useLocalSearchParams<{ id: string }>();
-  const lista = useListaStore((s) => (s.listaAtiva?.id === id ? s.listaAtiva : undefined));
+  const lista = useListaStore((s) => s.listas.find((l) => l.id === id));
   const definirPego = useListaStore((s) => s.definirPego);
   const definirPreco = useListaStore((s) => s.definirPreco);
   const historico = useListaStore((s) => s.historico);
@@ -128,7 +128,7 @@ export default function MercadoTela() {
       />
 
       <View style={styles.painel}>
-        {lista.compartilhada && <SeloFamilia />}
+        {lista.compartilhada && <SeloFamilia remotoId={lista.compartilhada.id} listaId={lista.id} />}
         <Text style={styles.faltam} accessibilityLiveRegion="polite">
           {progresso.total === 0
             ? 'Lista vazia'
@@ -237,7 +237,7 @@ export default function MercadoTela() {
         atual={lista.orcamento}
         onFechar={() => setEditandoOrcamento(false)}
         onSalvar={(valor) => {
-          definirOrcamento(valor);
+          definirOrcamento(valor, lista?.id);
           setEditandoOrcamento(false);
         }}
       />

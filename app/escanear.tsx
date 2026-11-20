@@ -16,13 +16,14 @@ import {
 } from 'react-native';
 
 import { Botao } from '@/components/Botao';
+import { SeletorLista } from '@/components/SeletorLista';
 import { useListaStore } from '@/store/useListaStore';
 import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
 import { buscarProdutoPorCodigo, codigoValido, normalizarCodigo } from '@/utils/codigoBarras';
 import { vibrarPego, vibrarSucesso } from '@/utils/vibrar';
 
 // Leitor de código de barras (Fase 3): a câmera lê o código, o Open Food Facts devolve nome e foto,
-// e o produto entra na lista ativa. Dá para ler vários seguidos; "Pronto" volta para a lista.
+// e o produto entra na lista atual (trocar no seletor do topo). Dá para ler vários seguidos; "Pronto" volta.
 // Código desconhecido: a pessoa digita o nome uma vez e o Listinha lembra (produtosPorCodigo).
 
 type Etapa =
@@ -147,6 +148,11 @@ export default function EscanearTela() {
       />
 
       {/* Moldura e dica */}
+      {/* Várias listas: para qual lista vão os produtos lidos */}
+      <View style={styles.seletor}>
+        <SeletorLista escuro />
+      </View>
+
       <View style={styles.sobreposicao} pointerEvents="box-none">
         <View style={styles.moldura} pointerEvents="none" />
         <Text style={styles.dica} pointerEvents="none">
@@ -278,6 +284,7 @@ const styles = StyleSheet.create({
     textShadowColor: '#000000',
     textShadowRadius: 6,
   },
+  seletor: { position: 'absolute', top: espaco.md, left: espaco.lg, right: espaco.lg + toqueMinimo + espaco.sm, zIndex: 2 },
   botaoLanterna: {
     position: 'absolute',
     top: espaco.lg,

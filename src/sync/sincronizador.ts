@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 import { create } from 'zustand';
 
@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { useListaStore } from '@/store/useListaStore';
 import { useSessao } from '@/store/useSessao';
 import type { ItemLista, Lista } from '@/types';
+import { listaPorRemoto } from '@/utils/listas';
 
 import {
   type EventoItem,
@@ -33,9 +34,30 @@ import {
 
 export type EstadoSync = 'desligado' | 'sem-login' | 'conectando' | 'sincronizado' | 'enviando' | 'sem-conexao' | 'sem-acesso';
 
-export const useEstadoSync = create<{ estado: EstadoSync; pendentes: number }>(() => ({ estado: 'desligado', pendentes: 0 }));
+export type SituacaoSync = { estado: EstadoSync; pendentes: number };
 
+/** Situação da sincronização de cada lista da família (por id remoto). */
+export const useEstadoSync = create<{ porLista: Record<string, SituacaoSync> }>(() => ({ porLista: {} }));
+
+const DESLIGADO: SituacaoSync = { estado: 'desligado', pendentes: 0 };
+
+function definirSituacao(remotoId: string, situacao: SituacaoSync | null) {
+  useEstadoSync.setState((s) => {
+    const porLista = { ...s.porLista };
+    if (situacao) porLista[remotoId] = situacao;
+    else delete porLista[remotoId];
+    return { porLista };
+  });
+}
+
+/** Situação da sincronização de uma lista da família ("desligado" sem id). */
+export function useSituacaoSync(remotoId: string | undefined): SituacaoSync {
+  return useEstadoSync((s) => (remotoId ? (s.porLista[remotoId] ?? DESLIGADO) : DESLIGADO));
+}
+
+// Uma chave por lista da família; a antiga (sem o id, de antes das várias listas) ainda é lida.
 const CHAVE_PENDENCIAS = 'listinha-sync-pendentes';
+const chavePendencias = (remotoId: string) => `${CHAVE_PENDENCIAS}:${remotoId}`;
 
 type PendenciasSalvas = { remotoId: string; ids: string[]; nome: boolean; orcamento: boolean; conclusao: boolean };
 
@@ -49,10 +71,7 @@ export function iniciarSincronizacao(remotoId: string): () => void {
   const sb = supabase;
   if (!sb) return () => {};
 
-  const listaAtual = (): Lista | null => {
-    const l = useListaStore.getState().listaAtiva;
-    return l?.compartilhada?.id === remotoId ? l : null;
-  };
+  const listaAtual = (): Lista | null => listaPorRemoto(useListaStore.getState().listas, remotoId) ?? null;
 
   let ativo = true;
   const inicial = listaAtual();
@@ -73,7 +92,7 @@ export function iniciarSincronizacao(remotoId: string): () => void {
 
   const publicar = (estado: EstadoSync) => {
     if (!ativo) return;
-    useEstadoSync.setState({ estado: semAcesso ? 'sem-acesso' : estado, pendentes: totalPendente() });
+    definirSituacao(remotoId, { estado: semAcesso ? 'sem-acesso' : estado, pendentes: totalPendente() });
   };
 
   // Pendências salvas no celular (sobrevivem a fechar o app).
@@ -81,11 +100,12 @@ export function iniciarSincronizacao(remotoId: string): () => void {
     if (timerSalvar) clearTimeout(timerSalvar);
     timerSalvar = setTimeout(() => {
       const dados: PendenciasSalvas = { remotoId, ids: [...pendentes.keys()], ...lista };
-      AsyncStorage.setItem(CHAVE_PENDENCIAS, JSON.stringify(dados)).catch(() => {});
+      AsyncStorage.setItem(chavePendencias(remotoId), JSON.stringify(dados)).catch(() => {});
     }, 200);
   };
 
-  const pronto: Promise<void> = AsyncStorage.getItem(CHAVE_PENDENCIAS)
+  const pronto: Promise<void> = AsyncStorage.getItem(chavePendencias(remotoId))
+    .then(async (texto) => texto ?? (await AsyncStorage.getItem(CHAVE_PENDENCIAS)))
     .then((texto) => {
       if (!texto) return;
       const salvo = JSON.parse(texto) as Partial<PendenciasSalvas>;
@@ -327,30 +347,56 @@ export function iniciarSincronizacao(remotoId: string): () => void {
       // Grava na hora o que estava agendado.
       clearTimeout(timerSalvar);
       const dados: PendenciasSalvas = { remotoId, ids: [...pendentes.keys()], ...lista };
-      AsyncStorage.setItem(CHAVE_PENDENCIAS, JSON.stringify(dados)).catch(() => {});
+      AsyncStorage.setItem(chavePendencias(remotoId), JSON.stringify(dados)).catch(() => {});
     }
     pararDeOuvirStore();
     appState.remove();
     void sb.removeChannel(canal);
-    useEstadoSync.setState({ estado: 'desligado', pendentes: 0 });
+    definirSituacao(remotoId, null);
   };
 }
 
-/** Liga/desliga a sincronização conforme o login e a lista ativa (usado no _layout). */
+/**
+ * Liga um motor para cada lista da família aberta (usado no _layout) e desliga os que sobram.
+ * Só mexe nos motores das listas que mudaram; sem login, marca as listas como "sem-login".
+ */
 export function useSincronizacao(): void {
   const { sessao, carregando } = useSessao();
   const usuario = sessao?.user.id;
-  const remotoId = useListaStore((s) => s.listaAtiva?.compartilhada?.id);
+  // Texto com os ids (ordenados) para o efeito só rodar quando o conjunto muda.
+  const idsTexto = useListaStore((s) =>
+    s.listas
+      .map((l) => l.compartilhada?.id)
+      .filter((id): id is string => !!id)
+      .sort()
+      .join(','),
+  );
+  const motores = useRef(new Map<string, () => void>());
 
   useEffect(() => {
-    if (!remotoId) {
-      useEstadoSync.setState({ estado: 'desligado', pendentes: 0 });
-      return;
+    const ids = new Set(idsTexto ? idsTexto.split(',') : []);
+    const ligados = motores.current;
+    for (const [id, parar] of ligados) {
+      if (!usuario || !ids.has(id)) {
+        parar();
+        ligados.delete(id);
+      }
     }
-    if (!usuario) {
-      if (!carregando) useEstadoSync.setState({ estado: 'sem-login', pendentes: 0 });
-      return;
+    for (const id of ids) {
+      if (!usuario) {
+        if (!carregando) definirSituacao(id, { estado: 'sem-login', pendentes: 0 });
+        continue;
+      }
+      if (!ligados.has(id)) ligados.set(id, iniciarSincronizacao(id));
     }
-    return iniciarSincronizacao(remotoId);
-  }, [remotoId, usuario, carregando]);
+  }, [idsTexto, usuario, carregando]);
+
+  // Ao sair do app (desmontar o _layout), desliga tudo.
+  useEffect(() => {
+    const ligados = motores.current;
+    return () => {
+      for (const parar of ligados.values()) parar();
+      ligados.clear();
+    };
+  }, []);
 }

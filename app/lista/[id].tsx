@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, SectionList, Share, StyleSheet, Text, type TextInputInstance, View } from 'react-native';
+import { Alert, Pressable, ScrollView, SectionList, Share, StyleSheet, Text, type TextInputInstance, View } from 'react-native';
 
 import { Aviso } from '@/components/Aviso';
 import { CampoAdicionar } from '@/components/CampoAdicionar';
@@ -9,7 +9,10 @@ import { CategoriaHeader } from '@/components/CategoriaHeader';
 import { ChipSugestao } from '@/components/ChipSugestao';
 import { ItemCard } from '@/components/ItemCard';
 import { ItemDeslizavel } from '@/components/ItemDeslizavel';
+import { ModalMenu } from '@/components/ModalMenu';
+import { ModalNovaLista } from '@/components/ModalNovaLista';
 import { ModalUnidade } from '@/components/ModalUnidade';
+import { supabase } from '@/lib/supabase';
 import { SeloFamilia } from '@/components/SeloFamilia';
 import { useBuscarImagens } from '@/store/useBuscarImagens';
 import { useListaStore } from '@/store/useListaStore';
@@ -27,7 +30,12 @@ import { chaveBusca } from '@/utils/normalizar';
 // deslizar para o lado exclui, com "Desfazer" no aviso por 4 s.
 export default function ListaTela() {
   const { id, aviso: avisoInicial } = useLocalSearchParams<{ id: string; aviso?: string }>();
-  const lista = useListaStore((s) => (s.listaAtiva?.id === id ? s.listaAtiva : s.historico.find((l) => l.id === id)));
+  const lista = useListaStore((s) => s.listas.find((l) => l.id === id) ?? s.historico.find((l) => l.id === id));
+  const abrirLista = useListaStore((s) => s.abrirLista);
+  // Várias listas (Fase 3): a lista aberta vira a "atual" (recebe Despensa, código de barras, importar…).
+  useEffect(() => {
+    if (id) abrirLista(id);
+  }, [id, abrirLista]);
   const historico = useListaStore((s) => s.historico);
   const ordemCategorias = useListaStore((s) => s.ordemCategorias);
   const adicionarItem = useListaStore((s) => s.adicionarItem);
@@ -35,6 +43,38 @@ export default function ListaTela() {
   const mudarUnidade = useListaStore((s) => s.mudarUnidade);
   const removerItem = useListaStore((s) => s.removerItem);
   const restaurarItem = useListaStore((s) => s.restaurarItem);
+  const renomearLista = useListaStore((s) => s.renomearLista);
+  const arquivarLista = useListaStore((s) => s.arquivarLista);
+  const excluirLista = useListaStore((s) => s.excluirLista);
+  const [menuAberto, setMenuAberto] = useState(false);
+  const [renomearAberto, setRenomearAberto] = useState(false);
+
+  /** Arquivar (vai para o histórico) ou excluir a lista; lista da família: sai dela antes. */
+  function fecharLista(modo: 'arquivar' | 'excluir') {
+    const atual = useListaStore.getState().listas.find((l) => l.id === id);
+    if (!atual) return;
+    const familia = atual.compartilhada
+      ? ' Você também sai da lista da família (as outras pessoas continuam com ela).'
+      : '';
+    const executar = async () => {
+      // Melhor esforço: sem sinal, sai só deste celular.
+      if (atual.compartilhada) await supabase?.rpc('sair_da_lista', { p_lista: atual.compartilhada.id });
+      if (modo === 'arquivar') arquivarLista(atual.id);
+      else excluirLista(atual.id);
+      router.back();
+    };
+    if (modo === 'arquivar') {
+      Alert.alert('Arquivar a lista?', `"${atual.nome}" sai das listas abertas e fica no histórico.${familia}`, [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Arquivar', onPress: () => void executar() },
+      ]);
+    } else {
+      Alert.alert('Excluir a lista?', `"${atual.nome}" e os itens dela serão apagados deste celular. Não dá para desfazer.${familia}`, [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Excluir', style: 'destructive', onPress: () => void executar() },
+      ]);
+    }
+  }
 
   const [texto, setTexto] = useState('');
   const [itemUnidadeId, setItemUnidadeId] = useState<string | null>(null);
@@ -128,13 +168,13 @@ export default function ListaTela() {
 
   function adicionarDigitado() {
     if (!texto.trim()) return;
-    avisar(adicionarItem(texto));
+    avisar(adicionarItem(texto, lista?.id));
     setTexto('');
     campoRef.current?.focus();
   }
 
   function adicionarNome(nome: string, manterFoco: boolean) {
-    avisar(adicionarItem(nome));
+    avisar(adicionarItem(nome, lista?.id));
     setTexto('');
     if (manterFoco) campoRef.current?.focus();
   }
@@ -146,17 +186,19 @@ export default function ListaTela() {
           title: lista.nome,
           headerRight: () => (
             <View style={styles.acoesTopo}>
-              <Pressable
-                onPress={compartilhar}
-                hitSlop={10}
-                accessibilityRole="button"
-                accessibilityLabel="Compartilhar a lista"
-              >
-                <Ionicons name="share-social-outline" size={24} color={cores.primariaEscura} />
-              </Pressable>
+              {!ehAtiva && (
+                <Pressable
+                  onPress={compartilhar}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel="Compartilhar a lista"
+                >
+                  <Ionicons name="share-social-outline" size={24} color={cores.primariaEscura} />
+                </Pressable>
+              )}
               {ehAtiva && (
                 <Pressable
-                  onPress={() => router.push('/familia')}
+                  onPress={() => router.push({ pathname: '/familia', params: { lista: lista.id } })}
                   hitSlop={10}
                   accessibilityRole="button"
                   accessibilityLabel="Dividir com a família"
@@ -178,6 +220,16 @@ export default function ListaTela() {
                   <Ionicons name="cart-outline" size={26} color={cores.primariaEscura} />
                 </Pressable>
               )}
+              {ehAtiva && (
+                <Pressable
+                  onPress={() => setMenuAberto(true)}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel="Mais opções da lista"
+                >
+                  <Ionicons name="ellipsis-vertical" size={22} color={cores.primariaEscura} />
+                </Pressable>
+              )}
             </View>
           ),
         }}
@@ -185,7 +237,7 @@ export default function ListaTela() {
 
       {ehAtiva && (
         <View style={styles.topo}>
-          {lista.compartilhada && <SeloFamilia />}
+          {lista.compartilhada && <SeloFamilia remotoId={lista.compartilhada.id} listaId={lista.id} />}
           <CampoAdicionar
             ref={campoRef}
             texto={texto}
@@ -302,6 +354,35 @@ export default function ListaTela() {
         duracao={aviso?.duracao}
         acao={aviso?.acao}
         onFechar={() => setAviso(null)}
+      />
+
+      <ModalMenu
+        visivel={menuAberto}
+        titulo={lista.nome}
+        onFechar={() => setMenuAberto(false)}
+        opcoes={[
+          { titulo: 'Compartilhar como texto', detalhe: 'WhatsApp, Telegram, e-mail…', icone: 'share-social-outline', onPress: compartilhar },
+          { titulo: 'Renomear', icone: 'create-outline', onPress: () => setRenomearAberto(true) },
+          {
+            titulo: 'Arquivar',
+            detalhe: 'Fecha a lista e guarda no histórico',
+            icone: 'archive-outline',
+            onPress: () => fecharLista('arquivar'),
+          },
+          { titulo: 'Excluir', detalhe: 'Apaga a lista sem guardar', icone: 'trash-outline', perigo: true, onPress: () => fecharLista('excluir') },
+        ]}
+      />
+
+      <ModalNovaLista
+        visivel={renomearAberto}
+        titulo="Renomear lista ✏️"
+        nomeInicial={lista.nome}
+        textoBotao="Salvar"
+        onCancelar={() => setRenomearAberto(false)}
+        onCriar={(nome) => {
+          renomearLista(lista.id, nome);
+          setRenomearAberto(false);
+        }}
       />
 
       <ModalUnidade

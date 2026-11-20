@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 
 import { Botao } from '@/components/Botao';
+import { SeletorLista } from '@/components/SeletorLista';
 import { supabase } from '@/lib/supabase';
 import { useListaStore } from '@/store/useListaStore';
 import { useSessao } from '@/store/useSessao';
@@ -28,14 +29,21 @@ import {
   normalizarCodigo,
   textoConvite,
 } from '@/sync/regras';
-import { type EstadoSync, useEstadoSync } from '@/sync/sincronizador';
+import { type EstadoSync, useSituacaoSync } from '@/sync/sincronizador';
 import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
 import type { ItemLista } from '@/types';
+import { listaPorRemoto } from '@/utils/listas';
 
 // Família (Fase 3): compartilhar a lista ativa por código de convite, entrar na lista de alguém
 // e parar de compartilhar. A sincronização em si fica em src/sync/sincronizador.ts.
 export default function FamiliaTela() {
   const { carregando, sessao } = useSessao();
+  // Várias listas: aberta a partir de uma lista, a tela trata dela (vira a lista atual).
+  const { lista: listaId } = useLocalSearchParams<{ lista?: string }>();
+  const abrirLista = useListaStore((s) => s.abrirLista);
+  useEffect(() => {
+    if (listaId) abrirLista(listaId);
+  }, [listaId, abrirLista]);
 
   if (!supabase) {
     return (
@@ -68,7 +76,14 @@ export default function FamiliaTela() {
 
 function Logado() {
   const listaAtiva = useListaStore((s) => s.listaAtiva);
-  return listaAtiva?.compartilhada ? <Compartilhada /> : <NaoCompartilhada />;
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={styles.seletor}>
+        <SeletorLista rotulo="Lista:" />
+      </View>
+      {listaAtiva?.compartilhada ? <Compartilhada /> : <NaoCompartilhada />}
+    </View>
+  );
 }
 
 const TEXTO_ESTADO: Record<EstadoSync, string> = {
@@ -77,14 +92,14 @@ const TEXTO_ESTADO: Record<EstadoSync, string> = {
   conectando: '⏳ Conectando…',
   sincronizado: '✅ Tudo sincronizado',
   enviando: '⏳ Enviando mudanças…',
-  'sem-conexao': '📡 Sem conexão. As mudanças sobem quando o sinal voltar (mantenha o app aberto).',
+  'sem-conexao': '📡 Sem conexão. As mudanças ficam guardadas e sobem quando o sinal voltar.',
   'sem-acesso': '⚠️ Você não participa mais desta lista (ou ela foi apagada).',
 };
 
 function Compartilhada() {
   const lista = useListaStore((s) => s.listaAtiva)!;
   const definirCompartilhada = useListaStore((s) => s.definirCompartilhada);
-  const { estado, pendentes } = useEstadoSync();
+  const { estado, pendentes } = useSituacaoSync(lista.compartilhada?.id);
   const [membros, setMembros] = useState<number | null>(null);
   const [saindo, setSaindo] = useState(false);
   const info = lista.compartilhada!;
@@ -123,7 +138,7 @@ function Compartilhada() {
               Alert.alert('Não deu certo', mensagemErroFamilia(error));
               return;
             }
-            definirCompartilhada(undefined);
+            definirCompartilhada(undefined, lista.id);
           },
         },
       ],
@@ -190,7 +205,7 @@ function NaoCompartilhada() {
 
   async function compartilharAtual() {
     if (!supabase || ocupado) return;
-    if (!useListaStore.getState().listaAtiva) novaLista('Compra da semana', false);
+    if (!useListaStore.getState().listaAtiva) novaLista('Compra da semana');
     const lista = useListaStore.getState().listaAtiva!;
     setOcupado('criar');
     try {
@@ -208,7 +223,7 @@ function NaoCompartilhada() {
           throw envio.error;
         }
       }
-      definirCompartilhada({ id: remota.id, codigo: remota.codigo });
+      definirCompartilhada({ id: remota.id, codigo: remota.codigo }, lista.id);
     } catch (erro) {
       Alert.alert('Não deu para compartilhar', mensagemErroFamilia(erro));
     } finally {
@@ -223,12 +238,20 @@ function NaoCompartilhada() {
       const { data, error } = await supabase.rpc('entrar_na_lista', { p_codigo: codigo });
       if (error || !data) throw error;
       const remota = data as { id: string; nome: string; codigo: string; orcamento: number | string | null };
+      // Já está aberta neste celular: só abre.
+      const jaAberta = listaPorRemoto(useListaStore.getState().listas, remota.id);
+      if (jaAberta) {
+        setCodigo('');
+        router.replace({ pathname: '/lista/[id]', params: { id: jaAberta.id } });
+        return;
+      }
       const linhas = await supabase.from('itens').select('*').eq('lista_id', remota.id);
       if (linhas.error) throw linhas.error;
       const itens = (linhas.data ?? []).map(linhaParaItem).filter((i): i is ItemLista => i !== null);
       const orcamento = Number(remota.orcamento);
+      // Juntar: a lista atual vira a da família. Separada: entra como mais uma lista aberta.
       const r = listaAoEntrar(
-        useListaStore.getState().listaAtiva,
+        juntar ? useListaStore.getState().listaAtiva : null,
         {
           nome: remota.nome,
           orcamento: Number.isFinite(orcamento) && orcamento > 0 ? orcamento : undefined,
@@ -255,17 +278,17 @@ function NaoCompartilhada() {
     if (!codigoConviteValido(codigo) || ocupado) return;
     const atual = useListaStore.getState().listaAtiva;
     const pendentes = atual?.itens.filter((i) => !i.pego).length ?? 0;
-    if (!atual || atual.itens.length === 0) {
+    if (!atual || pendentes === 0 || atual.compartilhada) {
       void entrar(false);
       return;
     }
     Alert.alert(
-      'E a sua lista atual?',
-      `"${atual.nome}" tem ${atual.itens.length} ${atual.itens.length === 1 ? 'item' : 'itens'}. Quer juntar com a lista da família ou guardar no histórico?`,
+      'Abrir a lista da família',
+      `Ela pode entrar como mais uma lista, ou juntar com "${atual.nome}" (os ${pendentes} ${pendentes === 1 ? 'item que falta vai' : 'itens que faltam vão'} para a lista da família).`,
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Guardar no histórico', onPress: () => void entrar(false) },
-        ...(pendentes > 0 ? [{ text: 'Juntar', onPress: () => void entrar(true) }] : []),
+        { text: `Juntar com "${atual.nome}"`, onPress: () => void entrar(true) },
+        { text: 'Mais uma lista', onPress: () => void entrar(false) },
       ],
     );
   }
@@ -318,6 +341,7 @@ function NaoCompartilhada() {
 }
 
 const styles = StyleSheet.create({
+  seletor: { paddingHorizontal: espaco.lg, paddingTop: espaco.sm },
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: espaco.xl },
   container: { padding: espaco.lg, gap: espaco.md, paddingBottom: espaco.xxl },
   emojiGrande: { fontSize: 48, textAlign: 'center' },

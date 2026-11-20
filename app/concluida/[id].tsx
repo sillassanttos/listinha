@@ -14,7 +14,7 @@ import { vibrarSucesso } from '@/utils/vibrar';
 // e, se faltou algo, levar os itens não comprados para a próxima lista.
 export default function CompraConcluidaTela() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const lista = useListaStore((s) => (s.listaAtiva?.id === id ? s.listaAtiva : undefined));
+  const lista = useListaStore((s) => s.listas.find((l) => l.id === id));
   const finalizarCompra = useListaStore((s) => s.finalizarCompra);
   const finalizando = useRef(false);
 
@@ -41,7 +41,7 @@ export default function CompraConcluidaTela() {
 
   function finalizar(levarPendentes: boolean) {
     finalizando.current = true;
-    finalizarCompra(levarPendentes);
+    finalizarCompra(levarPendentes, lista?.id);
     router.dismissAll(); // volta para o Início
   }
 
