@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { obterCategoria } from '@/data/categorias';
-import { cores, espaco, fonte, raio, sombraCartao } from '@/theme';
+import { espaco, fonte, raio, sombraCartao } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 import type { Lista } from '@/types';
 import { formatarDataAmigavel } from '@/utils/datas';
 import { calcularProgresso, textoProgresso } from '@/utils/lista';
@@ -13,6 +14,8 @@ type Props = { lista: Lista; onPress: () => void };
 
 // Cartão de destaque da lista ativa na tela Início.
 export function CartaoListaAtiva({ lista, onPress }: Props) {
+  const cores = useCores();
+  const styles = useEstilos();
   const progresso = calcularProgresso(lista);
   // Emojis das primeiras categorias da lista, para dar uma prévia visual.
   const emojis = [...new Set(lista.itens.map((i) => obterCategoria(i.categoria).emoji))].slice(0, 6);
@@ -45,7 +48,7 @@ export function CartaoListaAtiva({ lista, onPress }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   cartao: {
     backgroundColor: cores.superficie,
     borderRadius: raio.lg,
@@ -61,4 +64,4 @@ const styles = StyleSheet.create({
   data: { fontSize: fonte.tamanho.pequeno, color: cores.textoSecundario },
   emojis: { fontSize: 22 },
   progresso: { fontSize: fonte.tamanho.pequeno, color: cores.textoSecundario },
-});
+}));

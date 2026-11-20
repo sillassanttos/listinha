@@ -1,13 +1,15 @@
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
 import { useListaStore } from '@/store/useListaStore';
-import { cores, espaco, fonte, raio } from '@/theme';
+import { espaco, fonte, raio } from '@/theme';
+import { criarEstilos } from '@/theme/useCores';
 
 type Props = { rotulo?: string; escuro?: boolean };
 
 // Várias listas (Fase 3): escolhe para qual lista vão os itens desta tela (a "lista atual").
 // Só aparece com mais de uma lista aberta. Tocar troca a atual (abrirLista).
 export function SeletorLista({ rotulo = 'Vai para a lista:', escuro = false }: Props) {
+  const styles = useEstilos();
   const listas = useListaStore((s) => s.listas);
   const atualId = useListaStore((s) => s.listaAtualId);
   const abrirLista = useListaStore((s) => s.abrirLista);
@@ -37,7 +39,7 @@ export function SeletorLista({ rotulo = 'Vai para a lista:', escuro = false }: P
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   linha: { alignItems: 'center', gap: espaco.sm, paddingVertical: espaco.xs },
   rotulo: { fontSize: fonte.tamanho.pequeno, fontWeight: fonte.peso.negrito, color: cores.textoSecundario },
   chip: {
@@ -54,4 +56,4 @@ const styles = StyleSheet.create({
   chipAtivo: { backgroundColor: cores.primaria, borderColor: cores.primaria },
   chipTexto: { fontSize: fonte.tamanho.pequeno + 1, fontWeight: fonte.peso.medio, color: cores.texto },
   chipTextoAtivo: { color: cores.textoSobrePrimaria },
-});
+}));

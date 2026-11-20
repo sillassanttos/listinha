@@ -30,7 +30,7 @@ import {
 } from '@/utils/lista';
 import { listaComItem, listaPorRemoto, nomeSemRepetir, resolverAtual, substituirLista } from '@/utils/listas';
 
-import { type ImagemSalva, migrarDados, sanearDados, VERSAO_DADOS } from './persistencia';
+import { type ImagemSalva, type PreferenciaTema, migrarDados, sanearDados, VERSAO_DADOS } from './persistencia';
 
 // Estado global do app, salvo no celular pelo AsyncStorage (chave "listinha-store").
 // Fase 3: várias listas abertas ao mesmo tempo ("listas"); a "lista atual" é a aberta por último
@@ -53,6 +53,9 @@ type ListaState = {
   imagensOnline: boolean;
   definirImagem: (chave: string, uri: string | null) => void;
   definirImagensOnline: (ligado: boolean) => void;
+  /** Fase 3: modo escuro (sistema, claro ou escuro). */
+  tema: PreferenciaTema;
+  definirTema: (tema: PreferenciaTema) => void;
   /** Fase 2: ordem dos corredores escolhida pelo usuário. */
   ordemCategorias: CategoriaId[];
   moverCategoria: (id: CategoriaId, direcao: -1 | 1) => void;
@@ -150,6 +153,8 @@ export const useListaStore = create<ListaState>()(
         imagensOnline: true,
         definirImagem: (chave, uri) => set((s) => ({ imagens: { ...s.imagens, [chave]: { uri, em: Date.now() } } })),
         definirImagensOnline: (ligado) => set({ imagensOnline: ligado }),
+        tema: 'sistema',
+        definirTema: (tema) => set({ tema }),
         ordemCategorias: ORDEM_CATEGORIAS,
         moverCategoria: (id, direcao) => set((s) => ({ ordemCategorias: moverCategoria(s.ordemCategorias, id, direcao) })),
         restaurarOrdemCategorias: () => set({ ordemCategorias: ORDEM_CATEGORIAS }),
@@ -312,6 +317,7 @@ export const useListaStore = create<ListaState>()(
         ordemCategorias: s.ordemCategorias,
         categoriasManuais: s.categoriasManuais,
         produtosPorCodigo: s.produtosPorCodigo,
+        tema: s.tema,
       }),
       // Dados salvos passam sempre pela limpeza: nada corrompido chega às telas.
       migrate: (salvo, versao) => migrarDados(salvo, versao),

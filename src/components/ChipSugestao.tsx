@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { obterCategoria } from '@/data/categorias';
-import { cores, espaco, fonte, raio } from '@/theme';
+import { espaco, fonte, raio } from '@/theme';
+import { criarEstilos, useCores, useVerCategoria } from '@/theme/useCores';
 import type { Sugestao } from '@/utils/sugestoes';
 
 type Props = {
@@ -15,7 +15,10 @@ type Props = {
 
 // Chip de sugestão rápida: um toque e o item entra na lista.
 export function ChipSugestao({ sugestao, onPress, detalhe, destaque }: Props) {
-  const categoria = obterCategoria(sugestao.categoria);
+  const cores = useCores();
+  const verCategoria = useVerCategoria();
+  const styles = useEstilos();
+  const categoria = verCategoria(sugestao.categoria);
   return (
     <Pressable
       onPress={onPress}
@@ -36,7 +39,7 @@ export function ChipSugestao({ sugestao, onPress, detalhe, destaque }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   chip: {
     minHeight: 40,
     paddingHorizontal: espaco.md,
@@ -46,4 +49,4 @@ const styles = StyleSheet.create({
   },
   texto: { fontSize: fonte.tamanho.normal - 1, fontWeight: fonte.peso.medio, color: cores.texto },
   detalhe: { fontSize: fonte.tamanho.pequeno, fontWeight: fonte.peso.negrito, color: cores.textoSecundario },
-});
+}));

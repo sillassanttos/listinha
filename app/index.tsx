@@ -8,7 +8,8 @@ import { CartaoLembretes } from '@/components/CartaoLembretes';
 import { CartaoListaAtiva } from '@/components/CartaoListaAtiva';
 import { ModalNovaLista } from '@/components/ModalNovaLista';
 import { useListaStore } from '@/store/useListaStore';
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 import { formatarDataAmigavel } from '@/utils/datas';
 import { sugestoesPorFrequencia } from '@/utils/frequencia';
 
@@ -16,6 +17,8 @@ import { sugestoesPorFrequencia } from '@/utils/frequencia';
 // última compra (Fase 2), lembretes, família, preços, despensa e histórico.
 // O que entra daqui (lembretes, repetir) vai para a lista atual (a aberta por último).
 export default function Inicio() {
+  const cores = useCores();
+  const styles = useEstilos();
   const listas = useListaStore((s) => s.listas);
   const listaAtiva = useListaStore((s) => s.listaAtiva);
   const totalHistorico = useListaStore((s) => s.historico.length);
@@ -177,7 +180,7 @@ export default function Inicio() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   container: { padding: espaco.lg, gap: espaco.lg },
   secao: { fontSize: fonte.tamanho.pequeno, fontWeight: fonte.peso.negrito, color: cores.textoSecundario, marginBottom: -espaco.sm },
   saudacao: { fontSize: fonte.tamanho.grande, fontWeight: fonte.peso.negrito, color: cores.texto, marginTop: espaco.sm },
@@ -221,4 +224,4 @@ const styles = StyleSheet.create({
   linhaEmoji: { fontSize: 22 },
   linhaTexto: { flex: 1, fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.medio, color: cores.texto },
   contador: { fontSize: fonte.tamanho.pequeno, color: cores.textoSecundario },
-});
+}));

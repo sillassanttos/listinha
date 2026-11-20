@@ -5,7 +5,8 @@ import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 
 import { VariacaoPreco } from '@/components/VariacaoPreco';
 import { useListaStore } from '@/store/useListaStore';
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 import { historicoDePrecos, resumoPrecos } from '@/utils/historicoPrecos';
 import { chaveBusca } from '@/utils/normalizar';
 import { formatarReais } from '@/utils/preco';
@@ -13,6 +14,8 @@ import { formatarReais } from '@/utils/preco';
 // Histórico de preços (Fase 3): todos os produtos que já tiveram preço digitado numa compra concluída,
 // com o último preço e quanto mudou em relação à compra anterior. Toque abre o gráfico do produto.
 export default function PrecosTela() {
+  const cores = useCores();
+  const styles = useEstilos();
   const historico = useListaStore((s) => s.historico);
   const produtos = useMemo(() => historicoDePrecos(historico), [historico]);
   const [busca, setBusca] = useState('');
@@ -81,7 +84,7 @@ export default function PrecosTela() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   container: { padding: espaco.lg, gap: espaco.sm, paddingBottom: espaco.xxl },
   busca: {
     minHeight: toqueMinimo,
@@ -114,4 +117,4 @@ const styles = StyleSheet.create({
   vazioEmoji: { fontSize: 56 },
   vazioTitulo: { fontSize: fonte.tamanho.medio, fontWeight: fonte.peso.negrito, color: cores.texto },
   vazioTexto: { fontSize: fonte.tamanho.normal, color: cores.textoSecundario, textAlign: 'center' },
-});
+}));

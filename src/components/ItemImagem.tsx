@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useListaStore } from '@/store/useListaStore';
-import { cores, raio } from '@/theme';
+import { raio } from '@/theme';
+import { criarEstilos } from '@/theme/useCores';
 import { chaveImagem } from '@/utils/imagens';
 
 type Props = {
@@ -17,6 +18,7 @@ type Props = {
 // Foto do item (Fase 2) com o emoji como reserva: sem foto, com a busca desligada,
 // sem internet e sem cache, ou se a imagem falhar, aparece o emoji (seção 4 do LISTINHA.md).
 export function ItemImagem({ nome, emoji, tamanho = 36, apagado }: Props) {
+  const styles = useEstilos();
   const uri = useListaStore((s) => (s.imagensOnline ? s.imagens[chaveImagem(nome)]?.uri : null));
   const [falhou, setFalhou] = useState<string | null>(null);
 
@@ -40,8 +42,8 @@ export function ItemImagem({ nome, emoji, tamanho = 36, apagado }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   moldura: { borderRadius: raio.sm, overflow: 'hidden', backgroundColor: cores.superficie },
   imagem: { width: '100%', height: '100%' },
   apagado: { opacity: 0.5 },
-});
+}));

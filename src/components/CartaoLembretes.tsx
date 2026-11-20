@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos } from '@/theme/useCores';
 import { type Frequencia, textoLembrete } from '@/utils/frequencia';
 
 type Props = {
@@ -10,6 +11,7 @@ type Props = {
 
 // Fase 2: "Pode estar acabando" — itens que já passaram do intervalo de costume.
 export function CartaoLembretes({ lembretes, onAdicionar }: Props) {
+  const styles = useEstilos();
   if (lembretes.length === 0) return null;
   return (
     <View style={styles.cartao}>
@@ -40,16 +42,16 @@ export function CartaoLembretes({ lembretes, onAdicionar }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   cartao: {
-    backgroundColor: '#FFF6E6',
+    backgroundColor: cores.avisoFundo,
     borderRadius: raio.lg,
     padding: espaco.lg,
     gap: espaco.sm,
     borderWidth: 1,
     borderColor: cores.destaque + '66',
   },
-  titulo: { fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.negrito, color: '#9A6200' },
+  titulo: { fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.negrito, color: cores.avisoTexto },
   linha: { flexDirection: 'row', alignItems: 'center', gap: espaco.md, minHeight: toqueMinimo },
   emoji: { fontSize: 26 },
   texto: { fontSize: fonte.tamanho.normal, color: cores.texto },
@@ -62,4 +64,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   botaoTexto: { fontSize: fonte.tamanho.pequeno, fontWeight: fonte.peso.negrito, color: '#FFFFFF' },
-});
+}));

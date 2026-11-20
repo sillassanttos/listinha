@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { obterCategoria } from '@/data/categorias';
-import { cores, espaco, fonte, raio } from '@/theme';
+import { espaco, fonte, raio } from '@/theme';
+import { criarEstilos, useCores, useVerCategoria } from '@/theme/useCores';
 import type { ItemLista } from '@/types';
 import { formatarReais, totalDoItem } from '@/utils/preco';
 import { formatarQuantidadeUnidade } from '@/utils/quantidade';
@@ -18,7 +18,10 @@ type Props = {
 
 // Item do Modo Mercado: grande, para usar com uma mão. A linha inteira é a área de toque.
 export function ItemMercado({ item, onPress, onPreco }: Props) {
-  const categoria = obterCategoria(item.categoria);
+  const cores = useCores();
+  const verCategoria = useVerCategoria();
+  const styles = useEstilos();
+  const categoria = verCategoria(item.categoria);
   const pego = item.pego;
   const total = totalDoItem(item);
 
@@ -62,7 +65,7 @@ export function ItemMercado({ item, onPress, onPreco }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   cartao: {
     minHeight: 76,
     flexDirection: 'row',
@@ -101,4 +104,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   marcadorPego: { backgroundColor: cores.primaria },
-});
+}));

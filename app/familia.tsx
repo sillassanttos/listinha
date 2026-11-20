@@ -30,13 +30,16 @@ import {
   textoConvite,
 } from '@/sync/regras';
 import { type EstadoSync, useSituacaoSync } from '@/sync/sincronizador';
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 import type { ItemLista } from '@/types';
 import { listaPorRemoto } from '@/utils/listas';
 
 // Família (Fase 3): compartilhar a lista ativa por código de convite, entrar na lista de alguém
 // e parar de compartilhar. A sincronização em si fica em src/sync/sincronizador.ts.
 export default function FamiliaTela() {
+  const cores = useCores();
+  const styles = useEstilos();
   const { carregando, sessao } = useSessao();
   // Várias listas: aberta a partir de uma lista, a tela trata dela (vira a lista atual).
   const { lista: listaId } = useLocalSearchParams<{ lista?: string }>();
@@ -75,6 +78,7 @@ export default function FamiliaTela() {
 }
 
 function Logado() {
+  const styles = useEstilos();
   const listaAtiva = useListaStore((s) => s.listaAtiva);
   return (
     <View style={{ flex: 1 }}>
@@ -97,6 +101,8 @@ const TEXTO_ESTADO: Record<EstadoSync, string> = {
 };
 
 function Compartilhada() {
+  const cores = useCores();
+  const styles = useEstilos();
   const lista = useListaStore((s) => s.listaAtiva)!;
   const definirCompartilhada = useListaStore((s) => s.definirCompartilhada);
   const { estado, pendentes } = useSituacaoSync(lista.compartilhada?.id);
@@ -196,6 +202,8 @@ function Compartilhada() {
 }
 
 function NaoCompartilhada() {
+  const cores = useCores();
+  const styles = useEstilos();
   const listaAtiva = useListaStore((s) => s.listaAtiva);
   const novaLista = useListaStore((s) => s.novaLista);
   const definirCompartilhada = useListaStore((s) => s.definirCompartilhada);
@@ -340,7 +348,7 @@ function NaoCompartilhada() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   seletor: { paddingHorizontal: espaco.lg, paddingTop: espaco.sm },
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: espaco.xl },
   container: { padding: espaco.lg, gap: espaco.md, paddingBottom: espaco.xxl },
@@ -393,4 +401,4 @@ const styles = StyleSheet.create({
     marginTop: espaco.md,
   },
   botaoSairTexto: { fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.negrito, color: cores.perigo },
-});
+}));

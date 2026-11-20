@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { type GestureResponderEvent, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Line, Polyline, Text as SvgText } from 'react-native-svg';
 
-import { cores, espaco, fonte } from '@/theme';
+import { espaco, fonte } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 import type { Unidade } from '@/types';
 import { formatarDataAmigavel, formatarDiaMes } from '@/utils/datas';
 import { type PontoPreco, marcasDoEixo, pontoMaisProximo, posicoesNoTempo } from '@/utils/historicoPrecos';
@@ -16,11 +17,13 @@ import { formatarReais } from '@/utils/preco';
 
 const ALTURA = 190;
 const MARGEM = { esquerda: 64, direita: 18, topo: 14, baixo: 30 };
-const COR_SERIE = cores.primaria;
 
 type Props = { pontos: PontoPreco[]; unidade: Unidade; nomeProduto: string };
 
 export function GraficoPrecos({ pontos, unidade, nomeProduto }: Props) {
+  const cores = useCores();
+  const COR_SERIE = cores.primaria;
+  const styles = useEstilos();
   const [largura, setLargura] = useState(0);
   const [selecionado, setSelecionado] = useState(pontos.length - 1);
   const sel = Math.min(selecionado, pontos.length - 1);
@@ -146,10 +149,10 @@ export function GraficoPrecos({ pontos, unidade, nomeProduto }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   leitura: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: espaco.xs },
   leituraValor: { fontSize: fonte.tamanho.grande, fontWeight: fonte.peso.negrito, color: cores.texto },
   leituraUnidade: { fontSize: fonte.tamanho.pequeno, fontWeight: fonte.peso.medio, color: cores.textoSecundario },
   leituraData: { fontSize: fonte.tamanho.pequeno, color: cores.textoSecundario },
   dica: { fontSize: fonte.tamanho.pequeno, color: cores.textoSuave, textAlign: 'center', marginTop: espaco.xs },
-});
+}));

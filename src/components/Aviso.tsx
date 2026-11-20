@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text } from 'react-native';
 
-import { cores, duracaoAnimacao, espaco, fonte, raio } from '@/theme';
+import { duracaoAnimacao, espaco, fonte, raio } from '@/theme';
+import { criarEstilos } from '@/theme/useCores';
 
 type Props = {
   /** Texto do aviso; null esconde. Trocar o texto reinicia o tempo. */
@@ -17,6 +18,7 @@ type Props = {
 
 // Snackbar simples no rodapé: avisos, "Desfazer" e atalhos rápidos.
 export function Aviso({ mensagem, chave, acao, acao2, duracao = 2500, onFechar }: Props) {
+  const styles = useEstilos();
   const opacidade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export function Aviso({ mensagem, chave, acao, acao2, duracao = 2500, onFechar }
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   caixa: {
     position: 'absolute',
     left: espaco.lg,
@@ -64,4 +66,4 @@ const styles = StyleSheet.create({
   },
   texto: { flex: 1, color: cores.superficie, fontSize: fonte.tamanho.normal },
   acao: { color: cores.destaque, fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.negrito },
-});
+}));

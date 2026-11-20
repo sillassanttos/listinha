@@ -16,7 +16,8 @@ import { supabase } from '@/lib/supabase';
 import { SeloFamilia } from '@/components/SeloFamilia';
 import { useBuscarImagens } from '@/store/useBuscarImagens';
 import { useListaStore } from '@/store/useListaStore';
-import { cores, espaco, fonte } from '@/theme';
+import { espaco, fonte } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 import { agruparPorCategoria } from '@/utils/agrupar';
 import { gerarTextoLista } from '@/utils/compartilhar';
 import type { ResultadoAdicionar } from '@/utils/lista';
@@ -29,6 +30,8 @@ import { chaveBusca } from '@/utils/normalizar';
 // Quantidade com +/− e troca de unidade direto no item; tocar no nome abre a edição;
 // deslizar para o lado exclui, com "Desfazer" no aviso por 4 s.
 export default function ListaTela() {
+  const cores = useCores();
+  const styles = useEstilos();
   const { id, aviso: avisoInicial } = useLocalSearchParams<{ id: string; aviso?: string }>();
   const lista = useListaStore((s) => s.listas.find((l) => l.id === id) ?? s.historico.find((l) => l.id === id));
   const abrirLista = useListaStore((s) => s.abrirLista);
@@ -399,7 +402,7 @@ export default function ListaTela() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   tela: { flex: 1 },
   acoesTopo: { flexDirection: 'row', alignItems: 'center', gap: espaco.lg },
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: espaco.xl },
@@ -415,4 +418,4 @@ const styles = StyleSheet.create({
   vazio: { alignItems: 'center', gap: espaco.sm, paddingVertical: espaco.xxl },
   vazioEmoji: { fontSize: 56 },
   textoVazio: { fontSize: fonte.tamanho.normal, textAlign: 'center', color: cores.textoSecundario },
-});
+}));

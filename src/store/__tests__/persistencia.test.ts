@@ -14,6 +14,7 @@ const VAZIO = {
   ordemCategorias: ORDEM_CATEGORIAS,
   categoriasManuais: {},
   produtosPorCodigo: {},
+  tema: 'sistema',
 };
 
 describe('sanearDados', () => {
@@ -104,6 +105,13 @@ describe('sanearDados', () => {
     const r = sanearDados({ listas: [{ id: 'a', nome: 'X', criadaEm: 1, finalizadaEm: 9, itens: [] }], historico: [] });
     expect(r.listas).toEqual([]);
     expect(r.historico.map((l) => l.id)).toEqual(['a']);
+  });
+
+  it('tema: aceita sistema/claro/escuro; lixo vira sistema', () => {
+    expect(sanearDados({ tema: 'escuro' }).tema).toBe('escuro');
+    expect(sanearDados({ tema: 'claro' }).tema).toBe('claro');
+    expect(sanearDados({ tema: 'roxo' }).tema).toBe('sistema');
+    expect(sanearDados({}).tema).toBe('sistema');
   });
 
   it('formato antigo (uma listaAtiva) ainda é aceito', () => {

@@ -5,7 +5,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { GraficoPrecos } from '@/components/GraficoPrecos';
 import { VariacaoPreco } from '@/components/VariacaoPreco';
 import { useListaStore } from '@/store/useListaStore';
-import { cores, espaco, fonte, raio } from '@/theme';
+import { espaco, fonte, raio } from '@/theme';
+import { criarEstilos } from '@/theme/useCores';
 import { formatarDataAmigavel } from '@/utils/datas';
 import { historicoDePrecos, resumoPrecos } from '@/utils/historicoPrecos';
 import { formatarReais } from '@/utils/preco';
@@ -13,6 +14,7 @@ import { formatarReais } from '@/utils/preco';
 // Preço de um produto ao longo das compras (Fase 3): gráfico, menor/média/maior e a lista de compras
 // (a lista é a "tabela" do gráfico: todos os valores sem precisar tocar nele).
 export default function PrecoProdutoTela() {
+  const styles = useEstilos();
   const { chave } = useLocalSearchParams<{ chave: string }>();
   const historico = useListaStore((s) => s.historico);
   const produto = useMemo(() => historicoDePrecos(historico).find((p) => p.chave === chave), [historico, chave]);
@@ -66,6 +68,7 @@ export default function PrecoProdutoTela() {
 }
 
 function Resumo({ rotulo, valor }: { rotulo: string; valor: number }) {
+  const styles = useEstilos();
   return (
     <View style={styles.resumoCaixa}>
       <Text style={styles.resumoRotulo}>{rotulo}</Text>
@@ -74,7 +77,7 @@ function Resumo({ rotulo, valor }: { rotulo: string; valor: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: espaco.xl },
   container: { padding: espaco.lg, gap: espaco.md, paddingBottom: espaco.xxl },
   texto: { fontSize: fonte.tamanho.normal, color: cores.textoSecundario, textAlign: 'center' },
@@ -90,4 +93,4 @@ const styles = StyleSheet.create({
   valor: { fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.negrito, color: cores.texto },
   colVariacao: { width: 84, alignItems: 'flex-end' },
   ajuda: { fontSize: fonte.tamanho.pequeno, color: cores.textoSecundario },
-});
+}));

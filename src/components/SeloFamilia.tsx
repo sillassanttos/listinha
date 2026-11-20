@@ -2,7 +2,9 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { type EstadoSync, useSituacaoSync } from '@/sync/sincronizador';
-import { cores, espaco, fonte, raio } from '@/theme';
+import { espaco, fonte, raio } from '@/theme';
+import type { Cores } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 
 const ROTULO: Record<EstadoSync, string> = {
   desligado: 'conectando…',
@@ -14,16 +16,18 @@ const ROTULO: Record<EstadoSync, string> = {
   'sem-acesso': 'você saiu desta lista',
 };
 
-const COR: Partial<Record<EstadoSync, string>> = {
-  'sem-conexao': cores.destaque,
-  'sem-acesso': cores.perigo,
-  'sem-login': cores.perigo,
-};
+function corDoEstado(estado: EstadoSync, cores: Cores): string {
+  if (estado === 'sem-conexao') return cores.destaque;
+  if (estado === 'sem-acesso' || estado === 'sem-login') return cores.perigo;
+  return cores.primariaEscura;
+}
 
 // Fase 3: faixa "Lista da família" com a situação da sincronização; toque abre a tela Família.
 export function SeloFamilia({ remotoId, listaId }: { remotoId: string; listaId: string }) {
+  const cores = useCores();
+  const styles = useEstilos();
   const { estado } = useSituacaoSync(remotoId);
-  const cor = COR[estado] ?? cores.primariaEscura;
+  const cor = corDoEstado(estado, cores);
   return (
     <Pressable
       onPress={() => router.push({ pathname: '/familia', params: { lista: listaId } })}
@@ -38,7 +42,7 @@ export function SeloFamilia({ remotoId, listaId }: { remotoId: string; listaId: 
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   selo: {
     alignSelf: 'flex-start',
     paddingHorizontal: espaco.md,
@@ -48,4 +52,4 @@ const styles = StyleSheet.create({
     backgroundColor: cores.superficie,
   },
   texto: { fontSize: fonte.tamanho.pequeno, fontWeight: fonte.peso.medio },
-});
+}));

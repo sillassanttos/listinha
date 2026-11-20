@@ -6,7 +6,8 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { Botao } from '@/components/Botao';
 import { obterCategoria } from '@/data/categorias';
 import { useListaStore } from '@/store/useListaStore';
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores, useVerCategoria } from '@/theme/useCores';
 import type { CategoriaId, ItemLista, Unidade } from '@/types';
 import { categorizar } from '@/utils/categorizar';
 import { historicoDePrecos, resumoPrecos } from '@/utils/historicoPrecos';
@@ -25,6 +26,7 @@ import {
 // Editar item (seção 8.2): nome, quantidade, unidade, categoria e observação.
 // Só itens da lista ativa; listas do histórico são só leitura.
 export default function EditarItemTela() {
+  const styles = useEstilos();
   const { id } = useLocalSearchParams<{ id: string }>();
   // Várias listas: o item pode estar em qualquer lista aberta (ids de item são únicos).
   const item = useListaStore((s) => s.listas.flatMap((l) => l.itens).find((i) => i.id === id));
@@ -41,6 +43,9 @@ export default function EditarItemTela() {
 }
 
 function Formulario({ item }: { item: ItemLista }) {
+  const cores = useCores();
+  const verCategoria = useVerCategoria();
+  const styles = useEstilos();
   const atualizarItem = useListaStore((s) => s.atualizarItem);
   const ordemCategorias = useListaStore((s) => s.ordemCategorias);
   const categoriasManuais = useListaStore((s) => s.categoriasManuais);
@@ -107,7 +112,7 @@ function Formulario({ item }: { item: ItemLista }) {
     router.back();
   }
 
-  const cat = obterCategoria(categoria);
+  const cat = verCategoria(categoria);
   // Categoria diferente da automática fica lembrada ao salvar (Fase 2).
   const automatica = categorizar(nome).categoria;
   const nomeCurto = nome.trim();
@@ -206,7 +211,7 @@ function Formulario({ item }: { item: ItemLista }) {
         <Text style={styles.rotulo}>Categoria</Text>
         <View style={styles.grade}>
           {ordemCategorias.map((c) => {
-            const info = obterCategoria(c);
+            const info = verCategoria(c);
             const ativa = c === categoria;
             return (
               <Pressable
@@ -219,7 +224,7 @@ function Formulario({ item }: { item: ItemLista }) {
                   { backgroundColor: ativa ? info.cor : info.corFundo, borderColor: info.cor + '55' },
                 ]}
               >
-                <Text style={[styles.categoriaTexto, { color: ativa ? '#FFFFFF' : info.cor }]}>
+                <Text style={[styles.categoriaTexto, { color: ativa ? cores.textoSobreCor : info.cor }]}>
                   {info.emoji} {info.nome}
                 </Text>
               </Pressable>
@@ -263,7 +268,7 @@ function Formulario({ item }: { item: ItemLista }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: espaco.xl },
   container: { padding: espaco.lg, gap: espaco.sm, paddingBottom: espaco.xxl },
   salvarTopo: { fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.negrito, color: cores.primariaEscura },
@@ -316,4 +321,4 @@ const styles = StyleSheet.create({
   linkPrecosTexto: { fontSize: fonte.tamanho.pequeno + 1, fontWeight: fonte.peso.medio, color: cores.primariaEscura },
   dica: { fontSize: fonte.tamanho.pequeno, color: cores.textoSecundario, marginTop: espaco.xs },
   campoObservacao: { minHeight: 72, paddingTop: espaco.md, textAlignVertical: 'top' },
-});
+}));

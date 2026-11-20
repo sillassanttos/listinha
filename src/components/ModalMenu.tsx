@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 
 export type OpcaoMenu = {
   titulo: string;
@@ -16,6 +17,8 @@ type Props = { visivel: boolean; titulo: string; opcoes: OpcaoMenu[]; onFechar: 
 
 // Menu simples em folha no rodapé (o Alert do Android só aceita 3 botões).
 export function ModalMenu({ visivel, titulo, opcoes, onFechar }: Props) {
+  const cores = useCores();
+  const styles = useEstilos();
   return (
     <Modal visible={visivel} transparent animationType="fade" onRequestClose={onFechar}>
       <View style={styles.fundo}>
@@ -50,7 +53,7 @@ export function ModalMenu({ visivel, titulo, opcoes, onFechar }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   fundo: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)' },
   folha: {
     backgroundColor: cores.superficie,
@@ -73,4 +76,4 @@ const styles = StyleSheet.create({
   detalhe: { fontSize: fonte.tamanho.pequeno, color: cores.textoSecundario },
   cancelar: { minHeight: toqueMinimo, alignItems: 'center', justifyContent: 'center', marginTop: espaco.sm },
   cancelarTexto: { fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.negrito, color: cores.textoSecundario },
-});
+}));

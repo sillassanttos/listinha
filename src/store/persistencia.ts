@@ -14,6 +14,10 @@ export const VERSAO_DADOS = 2;
 /** Foto encontrada (uri) ou procurada sem sucesso (null), com a data da busca. */
 export type ImagemSalva = { uri: string | null; em: number };
 
+/** Fase 3: tema escolhido nas Configurações; "sistema" segue o modo claro/escuro do celular. */
+export type PreferenciaTema = 'sistema' | 'claro' | 'escuro';
+export const PREFERENCIAS_TEMA: PreferenciaTema[] = ['sistema', 'claro', 'escuro'];
+
 export type DadosSalvos = {
   /** Listas abertas (Fase 3: várias ao mesmo tempo). */
   listas: Lista[];
@@ -30,6 +34,8 @@ export type DadosSalvos = {
   categoriasManuais: CategoriasManuais;
   /** Fase 3: nome e foto por código de barras (lidos da internet ou digitados pelo usuário). */
   produtosPorCodigo: Record<string, ProdutoLembrado>;
+  /** Fase 3: modo escuro. */
+  tema: PreferenciaTema;
 };
 
 function sanearImagens(v: unknown): Record<string, ImagemSalva> {
@@ -102,6 +108,7 @@ export function sanearDados(salvo: unknown): DadosSalvos {
       ordemCategorias: sanearOrdemCategorias(undefined),
       categoriasManuais: {},
       produtosPorCodigo: {},
+      tema: 'sistema',
     };
   }
   // Aceita também o formato antigo (uma "listaAtiva"), caso chegue sem passar pela migração.
@@ -129,6 +136,7 @@ export function sanearDados(salvo: unknown): DadosSalvos {
     ordemCategorias: sanearOrdemCategorias(salvo.ordemCategorias),
     categoriasManuais: sanearCategoriasManuais(salvo.categoriasManuais),
     produtosPorCodigo: sanearProdutosPorCodigo(salvo.produtosPorCodigo),
+    tema: PREFERENCIAS_TEMA.includes(salvo.tema as PreferenciaTema) ? (salvo.tema as PreferenciaTema) : 'sistema',
   };
 }
 

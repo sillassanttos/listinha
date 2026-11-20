@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
 
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 
 type Props = {
   titulo: string;
@@ -11,6 +12,8 @@ type Props = {
 
 // Botão padrão do app: altura mínima de 48 px e leve escurecimento ao tocar.
 export function Botao({ titulo, onPress, variante = 'primario', style }: Props) {
+  const cores = useCores();
+  const styles = useEstilos();
   const primario = variante === 'primario';
   return (
     <Pressable
@@ -28,7 +31,7 @@ export function Botao({ titulo, onPress, variante = 'primario', style }: Props) 
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   base: {
     minHeight: toqueMinimo,
     paddingHorizontal: espaco.xl,
@@ -39,4 +42,4 @@ const styles = StyleSheet.create({
   primario: { backgroundColor: cores.primaria },
   secundario: { backgroundColor: cores.primariaClara },
   texto: { fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.negrito },
-});
+}));

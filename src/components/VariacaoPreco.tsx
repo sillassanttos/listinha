@@ -1,11 +1,13 @@
 import { StyleSheet, Text } from 'react-native';
 
-import { cores, fonte } from '@/theme';
+import { fonte } from '@/theme';
+import { useCores } from '@/theme/useCores';
 import { formatarVariacao } from '@/utils/historicoPrecos';
 
 // Selo de variação de preço: subiu (vermelho, ↑), baixou (verde, ↓) ou igual (cinza).
 // A cor nunca vem sozinha: sempre com seta e texto.
 export function VariacaoPreco({ variacao }: { variacao: number | undefined }) {
+  const cores = useCores();
   if (variacao === undefined) return null;
   const texto = formatarVariacao(variacao);
   const igual = texto === 'igual';

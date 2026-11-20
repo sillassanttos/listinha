@@ -19,13 +19,16 @@ import { Botao } from '@/components/Botao';
 import { codigoCompleto, emailValido, limparCodigo, mensagemErroLogin } from '@/lib/configSupabase';
 import { supabase } from '@/lib/supabase';
 import { type SituacaoBanco, useSessao, verificarBanco } from '@/store/useSessao';
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 
 const ESPERA_REENVIO = 60; // segundos
 
 // Conta (Fase 3): login sem senha, com código de 6 dígitos enviado por e-mail.
 // Só é preciso para compartilhar a lista com a família; o resto do app funciona sem login.
 export default function ContaTela() {
+  const cores = useCores();
+  const styles = useEstilos();
   const { carregando, sessao } = useSessao();
 
   if (!supabase) return <SemConfiguracao />;
@@ -40,6 +43,7 @@ export default function ContaTela() {
 }
 
 function SemConfiguracao() {
+  const styles = useEstilos();
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.titulo}>☁️ Compartilhamento ainda não configurado</Text>
@@ -53,6 +57,8 @@ function SemConfiguracao() {
 }
 
 function Entrar() {
+  const cores = useCores();
+  const styles = useEstilos();
   const [email, setEmail] = useState('');
   const [enviadoPara, setEnviadoPara] = useState<string | null>(null);
   const [codigo, setCodigo] = useState('');
@@ -194,6 +200,8 @@ const TEXTO_BANCO: Record<SituacaoBanco, string> = {
 };
 
 function Conectado({ email }: { email: string }) {
+  const cores = useCores();
+  const styles = useEstilos();
   const [banco, setBanco] = useState<SituacaoBanco>('verificando');
 
   useEffect(() => {
@@ -244,7 +252,7 @@ function Conectado({ email }: { email: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   container: { padding: espaco.lg, gap: espaco.sm, paddingBottom: espaco.xxl },
   titulo: { fontSize: fonte.tamanho.medio, fontWeight: fonte.peso.negrito, color: cores.texto },
@@ -289,4 +297,4 @@ const styles = StyleSheet.create({
     marginTop: espaco.lg,
   },
   botaoSairTexto: { fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.negrito, color: cores.perigo },
-});
+}));
