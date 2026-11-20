@@ -50,6 +50,30 @@ Na primeira vez, o Windows pode pedir para liberar o Node no firewall: libere pa
 Neste PC, o PowerShell bloqueia scripts `.ps1`, e por isso `npx` e `npm` dão erro de "execução de scripts desabilitada".
 Use `npx.cmd expo start` e `npm.cmd install`, sem mudar a política do Windows.
 
+## Gerar o APK (EAS Build)
+
+O APK instala direto no Android, sem o Expo Go. O build roda na nuvem da Expo (projeto `@gecaitecnologia/listinha`; pacote `com.sillassanttos.listinha`).
+
+1. Entre na conta Expo (uma vez por PC; quem digita a senha é o dono da conta):
+
+   ```powershell
+   npx.cmd eas-cli@latest login
+   ```
+
+2. Gere o APK (perfil `preview` do `eas.json`):
+
+   ```powershell
+   npx.cmd eas-cli@latest build --platform android --profile preview
+   ```
+
+3. Ao terminar, abra o link do build no celular, baixe o `.apk` e instale (o Android pede para permitir instalar de fontes desconhecidas).
+
+- O `.env` não sobe para a Expo: a URL e a chave **pública** do Supabase estão nas variáveis do projeto no EAS (`npx.cmd eas-cli@latest env:list`). Ao trocar de projeto Supabase, atualize lá também.
+- A chave de assinatura (keystore) foi gerada pela Expo e fica guardada na conta; não apague, senão o app instalado não aceita atualização.
+- A versão (`versionCode`) é controlada pela Expo (`appVersionSource: remote`).
+- Para a Play Store: perfil `production` (gera `.aab`).
+- O APK é outro app em relação ao Expo Go: os dados do Expo Go (listas, histórico) não passam para ele. A lista da família volta entrando com o mesmo código.
+
 ## Compartilhar com a família (Supabase, Fase 3)
 
 Opcional: sem isso, o app funciona normalmente, só no celular. Para dividir a lista, crie uma vez um projeto
@@ -105,6 +129,7 @@ no SQL Editor. Ele não apaga dados.
 | `npm test` | Testes automáticos (jest-expo) da lógica em `src/utils` |
 | `npx expo-doctor` | Diagnóstico de dependências e configuração |
 | `npx expo install <pacote>` | Instalar dependência na versão compatível com o SDK |
+| `npx eas-cli@latest build -p android --profile preview` | Gerar o APK na nuvem da Expo |
 
 ## Estrutura
 
