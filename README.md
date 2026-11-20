@@ -27,6 +27,7 @@ O documento do projeto, com fases, telas e modelo de dados, é o [LISTINHA.md](L
 
 - **Lista compartilhada em tempo real** com a família (Supabase, login por código no e-mail). Veja abaixo.
 - **Várias listas ao mesmo tempo** (mercado, farmácia, feira…): todas aparecem no Início; o que entra pela Despensa, pelo leitor ou pelos lembretes vai para a lista aberta por último (dá para trocar). Menu ⋮ da lista: renomear, arquivar ou excluir. Cada lista pode ter o seu código da família.
+- **Ditar a lista**: no campo da lista, toque em "Ditar" e use o microfone do teclado; fale "sabão em pó feijão café maçã" e o Listinha separa os itens (pergunta antes de adicionar).
 - **Modo escuro**: em Configurações → Aparência, escolha Automático (segue o celular), Claro ou Escuro.
 - **Histórico de preços:** em Início → Preços, cada produto com o último preço, quanto subiu ou baixou e um gráfico compra a compra.
 - **Leitor de código de barras:** na Lista, "Ler código de barras" abre a câmera; o nome e a foto vêm do Open Food Facts. Código desconhecido: digite o nome uma vez e o app lembra.

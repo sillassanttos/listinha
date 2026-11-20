@@ -67,7 +67,8 @@ export default function ImportarTela() {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.ajuda}>
           Copie a lista no WhatsApp e cole aqui. Cada linha vira um item; dá para escrever a quantidade, tipo
-          "2 kg de arroz" ou "leite x3".
+          "2 kg de arroz" ou "leite x3". Também dá para ditar pelo microfone do teclado, sem vírgula: "arroz feijão
+          café" vira três itens.
         </Text>
 
         <Pressable
