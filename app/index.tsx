@@ -204,6 +204,20 @@ export default function Inicio() {
         </Pressable>
 
         <Pressable
+          onPress={() => router.push('/precos')}
+          accessibilityRole="button"
+          accessibilityLabel="Preços: ver quanto cada produto custou"
+          style={({ pressed }) => [styles.linhaHistorico, pressed && { opacity: 0.7 }]}
+        >
+          <Text style={styles.linhaEmoji}>📈</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.linhaTexto}>Preços</Text>
+            <Text style={styles.contador}>Quanto cada produto custou, compra a compra</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={cores.textoSuave} />
+        </Pressable>
+
+        <Pressable
           onPress={() => router.push('/historico')}
           accessibilityRole="button"
           style={({ pressed }) => [styles.linhaHistorico, pressed && { opacity: 0.7 }]}
