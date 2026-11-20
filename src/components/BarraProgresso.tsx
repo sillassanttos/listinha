@@ -2,14 +2,17 @@ import { StyleSheet, View } from 'react-native';
 
 import { cores, raio } from '@/theme';
 
-type Props = { fracao: number; altura?: number };
+type Props = { fracao: number; altura?: number; cor?: string; corTrilho?: string };
 
 // Barra de progresso simples (0 a 1).
-export function BarraProgresso({ fracao, altura = 8 }: Props) {
+export function BarraProgresso({ fracao, altura = 8, cor, corTrilho }: Props) {
   const largura = `${Math.round(Math.min(Math.max(fracao, 0), 1) * 100)}%` as const;
   return (
-    <View style={[styles.trilho, { height: altura }]} accessibilityRole="progressbar">
-      <View style={[styles.preenchido, { width: largura }]} />
+    <View
+      style={[styles.trilho, { height: altura }, corTrilho ? { backgroundColor: corTrilho } : null]}
+      accessibilityRole="progressbar"
+    >
+      <View style={[styles.preenchido, { width: largura }, cor ? { backgroundColor: cor } : null]} />
     </View>
   );
 }

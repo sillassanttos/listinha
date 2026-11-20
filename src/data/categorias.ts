@@ -36,6 +36,28 @@ export const ORDEM_CATEGORIAS: CategoriaId[] = [
   'outros',
 ];
 
+/**
+ * Ordem salva pelo usuário, corrigida: só ids válidos, sem repetição, e as categorias que
+ * faltarem entram no fim (na ordem padrão). Assim uma categoria nova nunca some.
+ */
+export function sanearOrdemCategorias(v: unknown): CategoriaId[] {
+  const validas = Array.isArray(v)
+    ? v.filter((id): id is CategoriaId => typeof id === 'string' && id in CATEGORIAS)
+    : [];
+  const unicas = [...new Set(validas)];
+  return [...unicas, ...ORDEM_CATEGORIAS.filter((id) => !unicas.includes(id))];
+}
+
+/** Sobe (-1) ou desce (+1) uma categoria uma posição. */
+export function moverCategoria(ordem: CategoriaId[], id: CategoriaId, direcao: -1 | 1): CategoriaId[] {
+  const i = ordem.indexOf(id);
+  const j = i + direcao;
+  if (i < 0 || j < 0 || j >= ordem.length) return ordem;
+  const nova = [...ordem];
+  [nova[i], nova[j]] = [nova[j], nova[i]];
+  return nova;
+}
+
 export function obterCategoria(id: CategoriaId): CategoriaVisual {
   return CATEGORIAS[id] ?? CATEGORIAS.outros;
 }

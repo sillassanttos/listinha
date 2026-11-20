@@ -6,6 +6,8 @@ import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
 import type { ItemLista } from '@/types';
 import { formatarQuantidade, podeDiminuir } from '@/utils/quantidade';
 
+import { ItemImagem } from './ItemImagem';
+
 type Props = {
   item: ItemLista;
   /** Sem os handlers (lista do histórico), o item fica só para leitura. */
@@ -33,7 +35,7 @@ export function ItemCard({ item, onMais, onMenos, onUnidade, onEditar }: Props) 
         accessibilityLabel={onEditar ? `Editar ${item.nome}` : undefined}
         style={({ pressed }) => [styles.areaEditar, pressed && { opacity: 0.6 }]}
       >
-        <Text style={styles.emoji}>{item.emoji}</Text>
+        <ItemImagem nome={item.nome} emoji={item.emoji} tamanho={36} />
         <View style={styles.textos}>
           <Text style={[styles.nome, item.pego && styles.nomePego]} numberOfLines={2}>
             {item.pego ? '✓ ' : ''}

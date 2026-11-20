@@ -1,6 +1,7 @@
 import type { ItemLista, Lista, Unidade } from '@/types';
 
 import { categorizar } from './categorizar';
+import { aplicarCategoriaManual, type CategoriasManuais } from './categoriasManuais';
 import { chaveBusca } from './normalizar';
 import { ajustarQuantidade, passoDaUnidade, quantidadeAoTrocarUnidade } from './quantidade';
 
@@ -46,9 +47,14 @@ export type ResultadoAdicionar = {
  * Adiciona um item pelo nome. Se o mesmo item já está na lista e ainda não foi pego,
  * soma um passo na quantidade (1 un, 0,5 kg, 100 g…) em vez de duplicar. O item novo entra no fim da lista.
  */
-export function adicionarNaLista(lista: Lista, nome: string, agora = Date.now()): ResultadoAdicionar | null {
+export function adicionarNaLista(
+  lista: Lista,
+  nome: string,
+  agora = Date.now(),
+  manuais: CategoriasManuais = {},
+): ResultadoAdicionar | null {
   if (!nome.trim()) return null;
-  const novo = criarItem(nome, agora);
+  const novo = aplicarCategoriaManual(criarItem(nome, agora), manuais);
   const chave = chaveBusca(novo.nome);
   const existente = lista.itens.find((i) => !i.pego && chaveBusca(i.nome) === chave);
 
@@ -130,6 +136,89 @@ export function finalizarLista(
   if (!levarPendentes || !temPendentes) return { finalizada, proxima: null };
   const { novaLista } = iniciarNovaLista(atual, nomeProxima, true, agora);
   return { finalizada, proxima: novaLista };
+}
+
+export type ResultadoRepetir = {
+  lista: Lista;
+  /** Itens que entraram. */
+  adicionados: number;
+  /** Itens da compra anterior que já estavam (não pegos) na lista atual e foram mantidos como estavam. */
+  jaEstavam: number;
+};
+
+/**
+ * "Repetir última compra" (Fase 2): copia os itens da compra anterior, desmarcados, com id novo,
+ * mantendo quantidade, unidade, categoria, emoji e observação (o preço não vem).
+ * Sem lista ativa, cria uma com o nome da anterior; com lista ativa, só acrescenta o que ainda não está nela.
+ */
+export function repetirCompra(
+  atual: Lista | null,
+  anterior: Lista,
+  agora = Date.now(),
+  manuais: CategoriasManuais = {},
+): ResultadoRepetir {
+  const base: Lista = atual ?? { id: gerarId(), nome: anterior.nome, itens: [], criadaEm: agora };
+  const itens = [...base.itens];
+  let adicionados = 0;
+  let jaEstavam = 0;
+
+  anterior.itens.forEach((item, indice) => {
+    const chave = chaveBusca(item.nome);
+    if (itens.some((i) => !i.pego && chaveBusca(i.nome) === chave)) {
+      jaEstavam++;
+      return;
+    }
+    itens.push({
+      ...aplicarCategoriaManual(item, manuais),
+      id: gerarId(),
+      pego: false,
+      pegoEm: undefined,
+      preco: undefined,
+      criadoEm: agora + indice, // mantém a ordem original dentro de cada categoria
+    });
+    adicionados++;
+  });
+
+  return { lista: { ...base, itens }, adicionados, jaEstavam };
+}
+
+export type ItemParaImportar = { nome: string; quantidade?: number; unidade?: Unidade; observacao?: string };
+
+/**
+ * "Importar do WhatsApp": acrescenta os itens interpretados do texto colado.
+ * Categoria/emoji vêm do catálogo; quantidade, unidade e observação do texto (quando houver).
+ * O que já está (não pego) na lista fica como está e é contado em jaEstavam.
+ */
+export function adicionarImportados(
+  lista: Lista,
+  itens: ItemParaImportar[],
+  agora = Date.now(),
+  manuais: CategoriasManuais = {},
+): ResultadoRepetir {
+  const novos = [...lista.itens];
+  let adicionados = 0;
+  let jaEstavam = 0;
+
+  itens.forEach((importado, indice) => {
+    const base = aplicarCategoriaManual(criarItem(importado.nome, agora + indice), manuais);
+    const chave = chaveBusca(base.nome);
+    if (!chave) return;
+    if (novos.some((i) => !i.pego && chaveBusca(i.nome) === chave)) {
+      jaEstavam++;
+      return;
+    }
+    const unidade = importado.unidade ?? base.unidade;
+    const quantidade =
+      importado.quantidade && importado.quantidade > 0
+        ? importado.quantidade
+        : importado.unidade
+          ? Math.max(1, passoDaUnidade(unidade))
+          : base.quantidade;
+    novos.push({ ...base, unidade, quantidade, observacao: importado.observacao?.trim() || undefined });
+    adicionados++;
+  });
+
+  return { lista: { ...lista, itens: novos }, adicionados, jaEstavam };
 }
 
 /** Marca ou desmarca como pego no mercado (guarda a hora em pegoEm). */

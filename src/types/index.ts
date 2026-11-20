@@ -51,6 +51,8 @@ export type Lista = {
   itens: ItemLista[];
   criadaEm: number;
   finalizadaEm?: number;
+  /** Limite de gasto desta compra, em reais (Fase 2, opcional). */
+  orcamento?: number;
 };
 
 export type HistoricoItem = {

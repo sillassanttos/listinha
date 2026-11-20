@@ -6,6 +6,7 @@ import { Botao } from '@/components/Botao';
 import { useListaStore } from '@/store/useListaStore';
 import { cores, espaco, fonte, raio, sombraCartao } from '@/theme';
 import { calcularProgresso } from '@/utils/lista';
+import { calcularTotalCarrinho, formatarReais } from '@/utils/preco';
 import { formatarQuantidadeUnidade } from '@/utils/quantidade';
 import { vibrarSucesso } from '@/utils/vibrar';
 
@@ -36,6 +37,7 @@ export default function CompraConcluidaTela() {
   }
 
   const pendentes = lista.itens.filter((i) => !i.pego);
+  const carrinho = calcularTotalCarrinho(lista);
 
   function finalizar(levarPendentes: boolean) {
     finalizando.current = true;
@@ -53,6 +55,12 @@ export default function CompraConcluidaTela() {
         {progresso.pegos} de {progresso.total} {progresso.total === 1 ? 'item' : 'itens'} no carrinho
         {completa ? '. Mandou bem! 🛒' : '.'}
       </Text>
+      {carrinho.comPreco > 0 && (
+        <Text style={styles.total}>
+          Total: {formatarReais(carrinho.total)}
+          {carrinho.semPreco > 0 ? ` (+ ${carrinho.semPreco} sem preço)` : ''}
+        </Text>
+      )}
 
       {pendentes.length > 0 && (
         <View style={styles.cartao}>
@@ -97,6 +105,7 @@ const styles = StyleSheet.create({
   festa: { fontSize: 80, textAlign: 'center', marginTop: espaco.lg },
   titulo: { fontSize: fonte.tamanho.titulo, fontWeight: fonte.peso.negrito, color: cores.texto, textAlign: 'center' },
   texto: { fontSize: fonte.tamanho.normal, color: cores.textoSecundario, textAlign: 'center' },
+  total: { fontSize: fonte.tamanho.grande, fontWeight: fonte.peso.negrito, color: cores.primariaEscura, textAlign: 'center' },
   cartao: { backgroundColor: cores.superficie, borderRadius: raio.lg, padding: espaco.lg, gap: espaco.xs, ...sombraCartao },
   rotulo: { fontSize: fonte.tamanho.pequeno, fontWeight: fonte.peso.negrito, color: cores.textoSecundario, marginBottom: espaco.xs },
   pendente: { fontSize: fonte.tamanho.normal, color: cores.texto },

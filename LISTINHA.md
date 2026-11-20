@@ -211,15 +211,15 @@ type HistoricoItem = {    // usado para sugestões por frequência (Fase 2)
 - [x] Persistência local completa (fechar e abrir o app mantém tudo)
 
 ### 🚀 Fase 2 — Inteligência e praticidade
-- [ ] **Repetir última compra** com um toque
-- [ ] **Sugestões por frequência** ("faz 12 dias que você não compra café")
-- [ ] **Importar do WhatsApp**: colar texto e separar um item por linha (removendo marcadores como "-", "•", números)
-- [ ] **Imagens online** via Open Food Facts com cache local
-- [ ] **Preço por item e total do carrinho** no Modo Mercado
-- [ ] Orçamento opcional com alerta ao ultrapassar
-- [ ] Reordenar categorias pela ordem dos corredores
-- [ ] Lembrar a categoria escolhida manualmente para cada item
-- [ ] Modo **Despensa / "Acabou"**: marcar em casa o que terminou para entrar na próxima lista
+- [x] **Repetir última compra** com um toque
+- [x] **Sugestões por frequência** ("faz 12 dias que você não compra café")
+- [x] **Importar do WhatsApp**: colar texto e separar um item por linha (removendo marcadores como "-", "•", números)
+- [x] **Imagens online** via Open Food Facts com cache local
+- [x] **Preço por item e total do carrinho** no Modo Mercado
+- [x] Orçamento opcional com alerta ao ultrapassar
+- [x] Reordenar categorias pela ordem dos corredores
+- [x] Lembrar a categoria escolhida manualmente para cada item
+- [x] Modo **Despensa / "Acabou"**: marcar em casa o que terminou para entrar na próxima lista
 
 ### 🌟 Fase 3 — Recursos avançados
 - [ ] **Lista compartilhada em tempo real** com a família (backend gratuito: Supabase ou Firebase), com login simples

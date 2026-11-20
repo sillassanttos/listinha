@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { itensDaCasa, paraImportar } from '@/utils/despensa';
+
 import { CHAVE_ARMAZENAMENTO, useListaStore } from '../useListaStore';
 
 // AsyncStorage simulado em memória (mock oficial da biblioteca).
@@ -37,7 +39,47 @@ describe('persistência do store (fechar e abrir o app mantém tudo)', () => {
     expect(salvo.state.listaAtiva.itens.map((i: { nome: string }) => i.nome)).toEqual(['Banana', 'Café']);
     expect(salvo.state.listaAtiva.itens[0].pego).toBe(true);
     // Só dados; as funções do store não vão para o armazenamento.
-    expect(Object.keys(salvo.state).sort()).toEqual(['historico', 'listaAtiva']);
+    expect(Object.keys(salvo.state).sort()).toEqual([
+      'categoriasManuais',
+      'historico',
+      'imagens',
+      'imagensOnline',
+      'listaAtiva',
+      'ordemCategorias',
+    ]);
+  });
+
+  it('Despensa: "Acabou" sem lista ativa cria uma, com quantidade e unidade da última compra', () => {
+    const s = useListaStore.getState();
+    s.novaLista('Semana', false);
+    const leite = s.adicionarItem('leite')!.item;
+    useListaStore.getState().atualizarItem(leite.id, { ...leite, quantidade: 6 });
+    useListaStore.getState().finalizarCompra(false);
+    expect(useListaStore.getState().listaAtiva).toBeNull();
+
+    const casa = itensDaCasa(useListaStore.getState().historico);
+    const r = useListaStore.getState().importarItens([paraImportar(casa[0])]);
+    expect(r.adicionados).toBe(1);
+    expect(useListaStore.getState().listaAtiva?.itens[0]).toMatchObject({ nome: 'Leite', quantidade: 6, unidade: 'L', pego: false });
+    // Tocar de novo não duplica.
+    expect(useListaStore.getState().importarItens([paraImportar(casa[0])]).jaEstavam).toBe(1);
+  });
+
+  it('lembra a categoria escolhida na edição para a próxima vez que o item entrar', async () => {
+    const s = useListaStore.getState();
+    s.novaLista('Churrasco', false);
+    const item = s.adicionarItem('carvão')!.item;
+    expect(item.categoria).toBe('outros');
+    useListaStore.getState().atualizarItem(item.id, { ...item, categoria: 'carnes' });
+    expect(useListaStore.getState().categoriasManuais).toEqual({ carvao: 'carnes' });
+
+    useListaStore.getState().removerItem(item.id);
+    expect(useListaStore.getState().adicionarItem('Carvão')!.item.categoria).toBe('carnes');
+    await esperar();
+    expect((await lerSalvo()).state.categoriasManuais).toEqual({ carvao: 'carnes' });
+
+    useListaStore.getState().esquecerCategoriasManuais();
+    expect(useListaStore.getState().categoriasManuais).toEqual({});
   });
 
   it('ao "abrir o app" de novo, recarrega o que estava salvo', async () => {
