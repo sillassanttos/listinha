@@ -227,7 +227,10 @@ type HistoricoItem = {    // usado para sugestões por frequência (Fase 2)
 - [x] **Histórico de preços** e gráfico de variação por produto
 - [x] Várias listas simultâneas (ex.: mercado, farmácia, feira)
 - [x] Modo escuro
+- [x] **Ditar a lista** pelo microfone do teclado: o ditado sem vírgula ("sabão em pó feijão café") é separado em itens pelo catálogo, com confirmação
 - [ ] Build de APK com **EAS Build** e, se desejar, publicação na Play Store
+- [ ] Áudio longo com vários itens (gravar ou anexar): transcrição + IA separa os itens (precisa de servidor, internet e tem custo por uso)
+- [ ] Compartilhar texto ou áudio do WhatsApp direto para o Listinha (só no APK próprio; o Expo Go não recebe compartilhamentos)
 
 ---
 

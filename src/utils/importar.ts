@@ -1,6 +1,7 @@
 import { CATEGORIAS } from '@/data/categorias';
 import type { Unidade } from '@/types';
 
+import { separarDitado } from './ditado';
 import { chaveBusca, normalizar } from './normalizar';
 
 // "Importar do WhatsApp" (Fase 2): transforma um texto colado em itens.
@@ -117,7 +118,8 @@ export function interpretarTexto(texto: string): ItemImportado[] {
   const pedacos = texto
     .split(/\r?\n/)
     .filter((linha) => !ehCabecalho(linha))
-    .flatMap((linha) => linha.split(/[;,](?!\d)/)); // vírgula separa itens, mas não "1,5"
+    .flatMap((linha) => linha.split(/[;,](?!\d)/)) // vírgula separa itens, mas não "1,5"
+    .flatMap(separarDitado); // Fase 3: ditado sem vírgula ("arroz feijão café")
 
   const resultado: ItemImportado[] = [];
   const porChave = new Map<string, ItemImportado>();

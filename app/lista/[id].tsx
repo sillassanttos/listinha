@@ -25,6 +25,8 @@ import { formatarQuantidadeUnidade } from '@/utils/quantidade';
 import { buscarSugestoes, chipsSugestao, itensProprios } from '@/utils/sugestoes';
 import { rotuloCurto, sugestoesPorFrequencia } from '@/utils/frequencia';
 import { chaveBusca } from '@/utils/normalizar';
+import { separarDitado } from '@/utils/ditado';
+import { interpretarTexto } from '@/utils/importar';
 
 // Tela Lista (seção 8.2): adicionar com autocompletar e chips, itens agrupados por categoria.
 // Quantidade com +/− e troca de unidade direto no item; tocar no nome abre a edição;
@@ -95,6 +97,7 @@ export default function ListaTela() {
   }, [avisoInicial]);
   const avisoPendente = useListaStore((s) => s.avisoPendente);
   const definirAvisoPendente = useListaStore((s) => s.definirAvisoPendente);
+  const importarItens = useListaStore((s) => s.importarItens);
   useEffect(() => {
     if (!avisoPendente) return;
     setAviso({ mensagem: avisoPendente, chave: Date.now(), duracao: 3500 });
@@ -171,9 +174,51 @@ export default function ListaTela() {
 
   function adicionarDigitado() {
     if (!texto.trim()) return;
+    // Ditado (microfone do teclado) com vários itens sem vírgula: confirma a separação antes.
+    const partes = separarDitado(texto);
+    if (partes.length > 1) {
+      const itens = interpretarTexto(texto);
+      Alert.alert(
+        `Adicionar ${itens.length} itens?`,
+        itens.map((i) => '• ' + i.nome + (i.quantidade ? ` (${formatarQuantidadeUnidade(i.quantidade, i.unidade ?? 'un')})` : '')).join('\n'),
+        [
+          { text: 'Um item só', onPress: () => adicionarComoEsta() },
+          { text: 'Cancelar', style: 'cancel' },
+          { text: `Adicionar ${itens.length}`, onPress: () => adicionarVarios(itens) },
+        ],
+      );
+      return;
+    }
+    adicionarComoEsta();
+  }
+
+  function adicionarComoEsta() {
     avisar(adicionarItem(texto, lista?.id));
     setTexto('');
     campoRef.current?.focus();
+  }
+
+  function adicionarVarios(itens: ReturnType<typeof interpretarTexto>) {
+    if (lista) abrirLista(lista.id); // os itens vão para esta lista
+    const r = importarItens(itens);
+    setAviso({
+      mensagem:
+        `🎤 ${r.adicionados} ${r.adicionados === 1 ? 'item adicionado' : 'itens adicionados'}` +
+        (r.jaEstavam ? ` (${r.jaEstavam} já estava${r.jaEstavam === 1 ? '' : 'm'} na lista)` : ''),
+      chave: Date.now(),
+      duracao: 3500,
+    });
+    setTexto('');
+    campoRef.current?.focus();
+  }
+
+  function ditar() {
+    campoRef.current?.focus();
+    setAviso({
+      mensagem: '🎤 Toque no microfone do teclado e fale os itens, ex.: "arroz feijão café". O Listinha separa sozinho.',
+      chave: Date.now(),
+      duracao: 6000,
+    });
   }
 
   function adicionarNome(nome: string, manterFoco: boolean) {
@@ -302,6 +347,16 @@ export default function ListaTela() {
               >
                 <Ionicons name="barcode-outline" size={18} color={cores.primariaEscura} />
                 <Text style={styles.linkImportarTexto}>Ler código de barras</Text>
+              </Pressable>
+              <Pressable
+                onPress={ditar}
+                accessibilityRole="button"
+                accessibilityLabel="Ditar a lista pelo microfone do teclado"
+                hitSlop={6}
+                style={({ pressed }) => [styles.linkImportar, pressed && { opacity: 0.6 }]}
+              >
+                <Ionicons name="mic-outline" size={18} color={cores.primariaEscura} />
+                <Text style={styles.linkImportarTexto}>Ditar</Text>
               </Pressable>
             </View>
           )}
