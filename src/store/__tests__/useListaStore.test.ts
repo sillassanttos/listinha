@@ -49,6 +49,7 @@ describe('persistência do store (fechar e abrir o app mantém tudo)', () => {
       'listas',
       'ordemCategorias',
       'produtosPorCodigo',
+      'tema',
     ]);
   });
 

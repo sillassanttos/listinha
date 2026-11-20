@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 import { lerPreco, precoParaCampo } from '@/utils/preco';
 
 import { Botao } from './Botao';
@@ -17,6 +18,8 @@ const SUGESTOES = [100, 200, 300, 500];
 
 // Orçamento da compra (Fase 2): limite opcional; o Modo Mercado avisa ao passar dele.
 export function ModalOrcamento({ visivel, atual, onSalvar, onFechar }: Props) {
+  const cores = useCores();
+  const styles = useEstilos();
   const [texto, setTexto] = useState('');
 
   useEffect(() => {
@@ -83,7 +86,7 @@ export function ModalOrcamento({ visivel, atual, onSalvar, onFechar }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   fundo: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)' },
   janela: {
     backgroundColor: cores.superficie,
@@ -118,4 +121,4 @@ const styles = StyleSheet.create({
   },
   sugestaoTexto: { fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.medio, color: cores.primariaEscura },
   botoes: { flexDirection: 'row', gap: espaco.md, marginTop: espaco.sm },
-});
+}));

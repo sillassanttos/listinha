@@ -1,11 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import type { ComponentProps } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
-import { ORDEM_CATEGORIAS, obterCategoria } from '@/data/categorias';
+import { ORDEM_CATEGORIAS } from '@/data/categorias';
 import { PRODUTOS } from '@/data/produtos';
+import type { PreferenciaTema } from '@/store/persistencia';
 import { useListaStore } from '@/store/useListaStore';
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores, useVerCategoria } from '@/theme/useCores';
 import type { CategoriaId } from '@/types';
 
 const totalPorCategoria = PRODUTOS.reduce<Partial<Record<CategoriaId, number>>>((acc, produto) => {
@@ -15,12 +18,23 @@ const totalPorCategoria = PRODUTOS.reduce<Partial<Record<CategoriaId, number>>>(
 
 // Configurações: dados salvos no celular ("Limpar dados"), fotos online, testes (só no Expo Go)
 // e a ordem dos corredores (reordenar categorias com ↑/↓, Fase 2).
+const OPCOES_TEMA: { valor: PreferenciaTema; titulo: string; icone: ComponentProps<typeof Ionicons>['name'] }[] = [
+  { valor: 'sistema', titulo: 'Automático', icone: 'phone-portrait-outline' },
+  { valor: 'claro', titulo: 'Claro', icone: 'sunny-outline' },
+  { valor: 'escuro', titulo: 'Escuro', icone: 'moon-outline' },
+];
+
 export default function ConfiguracoesTela() {
+  const cores = useCores();
+  const verCategoria = useVerCategoria();
+  const styles = useEstilos();
   const listas = useListaStore((s) => s.listas);
   const historico = useListaStore((s) => s.historico);
   const limparDados = useListaStore((s) => s.limparDados);
   const carregarHistoricoExemplo = useListaStore((s) => s.carregarHistoricoExemplo);
   const imagensOnline = useListaStore((s) => s.imagensOnline);
+  const tema = useListaStore((s) => s.tema);
+  const definirTema = useListaStore((s) => s.definirTema);
   const definirImagensOnline = useListaStore((s) => s.definirImagensOnline);
   const totalFotos = useListaStore((s) => Object.values(s.imagens).filter((i) => i.uri).length);
   const ordemCategorias = useListaStore((s) => s.ordemCategorias);
@@ -100,6 +114,29 @@ export default function ConfiguracoesTela() {
         </Pressable>
       </View>
 
+      <Text style={[styles.secao, { marginTop: espaco.lg }]}>Aparência</Text>
+      <View style={styles.cartao}>
+        <View style={styles.temas} accessibilityRole="radiogroup">
+          {OPCOES_TEMA.map((o) => {
+            const ativo = tema === o.valor;
+            return (
+              <Pressable
+                key={o.valor}
+                onPress={() => definirTema(o.valor)}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: ativo }}
+                accessibilityLabel={`Tema ${o.titulo}`}
+                style={({ pressed }) => [styles.tema, ativo && styles.temaAtivo, pressed && { opacity: 0.7 }]}
+              >
+                <Ionicons name={o.icone} size={20} color={ativo ? cores.textoSobrePrimaria : cores.primariaEscura} />
+                <Text style={[styles.temaTexto, ativo && { color: cores.textoSobrePrimaria }]}>{o.titulo}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Text style={styles.ajuda}>Automático segue o modo claro ou escuro do celular.</Text>
+      </View>
+
       <Text style={[styles.secao, { marginTop: espaco.lg }]}>Fotos dos produtos</Text>
       <View style={styles.cartao}>
         <View style={styles.linhaSwitch}>
@@ -115,7 +152,7 @@ export default function ConfiguracoesTela() {
             value={imagensOnline}
             onValueChange={definirImagensOnline}
             trackColor={{ true: cores.primaria, false: cores.borda }}
-            thumbColor={cores.superficie}
+            thumbColor="#FFFFFF"
             accessibilityLabel="Buscar fotos na internet"
           />
         </View>
@@ -172,7 +209,7 @@ export default function ConfiguracoesTela() {
       </Text>
 
       {ordemCategorias.map((id, indice) => {
-        const c = obterCategoria(id);
+        const c = verCategoria(id);
         const primeiro = indice === 0;
         const ultimo = indice === ordemCategorias.length - 1;
         return (
@@ -211,7 +248,7 @@ export default function ConfiguracoesTela() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   container: { padding: espaco.lg, gap: espaco.sm },
   secao: { fontSize: fonte.tamanho.medio, fontWeight: fonte.peso.negrito, color: cores.texto },
   ajuda: { fontSize: fonte.tamanho.pequeno, color: cores.textoSecundario, marginBottom: espaco.sm },
@@ -219,6 +256,20 @@ const styles = StyleSheet.create({
   cartao: { backgroundColor: cores.superficie, borderRadius: raio.lg, padding: espaco.lg, gap: espaco.sm },
   textoDados: { fontSize: fonte.tamanho.normal, color: cores.texto },
   linhaSwitch: { flexDirection: 'row', alignItems: 'center', gap: espaco.md },
+  temas: { flexDirection: 'row', gap: espaco.sm },
+  tema: {
+    flex: 1,
+    minHeight: toqueMinimo,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: espaco.xs,
+    borderRadius: raio.md,
+    borderWidth: 1,
+    borderColor: cores.borda,
+  },
+  temaAtivo: { backgroundColor: cores.primaria, borderColor: cores.primaria },
+  temaTexto: { fontSize: fonte.tamanho.pequeno + 1, fontWeight: fonte.peso.medio, color: cores.texto },
   botaoPerigo: {
     minHeight: toqueMinimo,
     flexDirection: 'row',
@@ -254,4 +305,4 @@ const styles = StyleSheet.create({
   linkRestaurar: { fontSize: fonte.tamanho.pequeno, fontWeight: fonte.peso.negrito, color: cores.primariaEscura },
   posicao: { width: 18, fontSize: fonte.tamanho.pequeno, fontWeight: fonte.peso.negrito, color: cores.textoSecundario, textAlign: 'center' },
   seta: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' },
-});
+}));

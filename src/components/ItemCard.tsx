@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { obterCategoria } from '@/data/categorias';
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores, useVerCategoria } from '@/theme/useCores';
 import type { ItemLista } from '@/types';
 import { formatarQuantidade, podeDiminuir } from '@/utils/quantidade';
 
@@ -21,7 +21,10 @@ type Props = {
 // Linha de um item da lista: faixa da categoria, emoji grande, nome, observação e quantidade com +/−.
 // Tocar no nome abre a edição. Deslizar para excluir entra na próxima etapa.
 export function ItemCard({ item, onMais, onMenos, onUnidade, onEditar }: Props) {
-  const categoria = obterCategoria(item.categoria);
+  const cores = useCores();
+  const verCategoria = useVerCategoria();
+  const styles = useEstilos();
+  const categoria = verCategoria(item.categoria);
   const editavel = !!(onMais && onMenos);
   const menosAtivo = podeDiminuir(item.quantidade, item.unidade);
 
@@ -90,7 +93,7 @@ export function ItemCard({ item, onMais, onMenos, onUnidade, onEditar }: Props) 
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   cartao: {
     minHeight: toqueMinimo + 16,
     flexDirection: 'row',
@@ -123,4 +126,4 @@ const styles = StyleSheet.create({
   quantidade: { fontSize: fonte.tamanho.medio, fontWeight: fonte.peso.negrito, color: cores.texto },
   unidade: { fontSize: 11, color: cores.textoSecundario, textDecorationLine: 'underline' },
   quantidadeLeitura: { fontSize: fonte.tamanho.normal, color: cores.textoSecundario, fontWeight: fonte.peso.medio, paddingRight: espaco.sm },
-});
+}));

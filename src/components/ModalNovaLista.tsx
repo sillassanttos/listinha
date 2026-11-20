@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 
 import { Botao } from './Botao';
 
@@ -21,6 +22,8 @@ const NOME_PADRAO = 'Compra da semana';
 
 // Janela para dar nome à lista nova.
 export function ModalNovaLista({ visivel, aviso, onCancelar, onCriar, titulo = 'Nova lista 📝', nomeInicial = NOME_PADRAO, textoBotao = 'Criar' }: Props) {
+  const cores = useCores();
+  const styles = useEstilos();
   const [nome, setNome] = useState(nomeInicial);
 
   useEffect(() => {
@@ -57,7 +60,7 @@ export function ModalNovaLista({ visivel, aviso, onCancelar, onCriar, titulo = '
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   fundo: { flex: 1, justifyContent: 'center', padding: espaco.xl, backgroundColor: 'rgba(0,0,0,0.35)' },
   janela: { backgroundColor: cores.superficie, borderRadius: raio.lg, padding: espaco.xl, gap: espaco.md },
   titulo: { fontSize: fonte.tamanho.grande, fontWeight: fonte.peso.negrito, color: cores.texto },
@@ -73,4 +76,4 @@ const styles = StyleSheet.create({
     color: cores.texto,
   },
   botoes: { flexDirection: 'row', gap: espaco.md, marginTop: espaco.sm },
-});
+}));

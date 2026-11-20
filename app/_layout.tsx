@@ -5,9 +5,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useHidratado } from '@/store/useHidratado';
 import { useSincronizacao } from '@/sync/sincronizador';
-import { cores, fonte } from '@/theme';
+import { fonte } from '@/theme';
+import { useCores } from '@/theme/useCores';
 
 export default function RootLayout() {
+  const cores = useCores();
   const hidratado = useHidratado();
   // Fase 3: liga a sincronização da lista compartilhada (quando houver login e lista da família).
   useSincronizacao();
@@ -24,7 +26,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="dark" />
+      <StatusBar style={cores.esquema === 'escuro' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerTitleAlign: 'center',

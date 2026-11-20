@@ -7,7 +7,8 @@ import { Aviso } from '@/components/Aviso';
 import { CategoriaHeader } from '@/components/CategoriaHeader';
 import { SeletorLista } from '@/components/SeletorLista';
 import { useListaStore } from '@/store/useListaStore';
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 import { type ItemDespensa, filtrarDespensa, itensDaCasa, paraImportar, secoesDespensa } from '@/utils/despensa';
 import type { ItemRemovido } from '@/utils/lista';
 import { chaveBusca } from '@/utils/normalizar';
@@ -19,6 +20,8 @@ type Secao = { titulo: 'acabando' | ItemDespensa['categoria']; data: ItemDespens
 // Modo Despensa / "Acabou" (Fase 2): em casa, toque em "Acabou" no que terminou e o item
 // vai para a lista atual (a aberta por último; dá para trocar no seletor). Sem lista, uma "Compra da semana" é criada.
 export default function DespensaTela() {
+  const cores = useCores();
+  const styles = useEstilos();
   const historico = useListaStore((s) => s.historico);
   const listaAtiva = useListaStore((s) => s.listaAtiva);
   const ordemCategorias = useListaStore((s) => s.ordemCategorias);
@@ -216,7 +219,7 @@ export default function DespensaTela() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   tela: { flex: 1, backgroundColor: cores.fundo },
   container: { padding: espaco.lg, paddingBottom: espaco.xxl + 40, gap: espaco.xs },
   intro: { fontSize: fonte.tamanho.normal, color: cores.textoSecundario },
@@ -250,11 +253,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: espaco.md,
     paddingVertical: espaco.sm,
     borderRadius: raio.md,
-    backgroundColor: '#FFF3E0',
+    backgroundColor: cores.avisoFundo,
     marginTop: espaco.sm,
   },
-  cabecalhoAcabandoTexto: { fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.negrito, color: '#B26A00' },
-  cabecalhoAcabandoContador: { fontSize: fonte.tamanho.pequeno, color: '#B26A00' },
+  cabecalhoAcabandoTexto: { fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.negrito, color: cores.avisoTexto },
+  cabecalhoAcabandoContador: { fontSize: fonte.tamanho.pequeno, color: cores.avisoTexto },
   linha: {
     minHeight: toqueMinimo + 12,
     flexDirection: 'row',
@@ -295,4 +298,4 @@ const styles = StyleSheet.create({
     marginTop: espaco.lg,
   },
   verListaTexto: { fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.negrito, color: cores.primariaEscura },
-});
+}));

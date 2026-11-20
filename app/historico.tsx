@@ -4,7 +4,8 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { obterCategoria } from '@/data/categorias';
 import { useListaStore } from '@/store/useListaStore';
-import { cores, espaco, fonte, raio, sombraCartao } from '@/theme';
+import { espaco, fonte, raio, sombraCartao } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 import type { Lista } from '@/types';
 import { formatarDataAmigavel } from '@/utils/datas';
 import { calcularProgresso } from '@/utils/lista';
@@ -12,6 +13,7 @@ import { calcularProgresso } from '@/utils/lista';
 // Histórico (seção 8.1): listas finalizadas, da mais recente para a mais antiga.
 // Tocar abre a lista só para leitura.
 export default function HistoricoTela() {
+  const styles = useEstilos();
   const historico = useListaStore((s) => s.historico);
 
   return (
@@ -40,6 +42,8 @@ export default function HistoricoTela() {
 }
 
 function CartaoHistorico({ lista }: { lista: Lista }) {
+  const cores = useCores();
+  const styles = useEstilos();
   const { total, pegos } = calcularProgresso(lista);
   const emojis = [...new Set(lista.itens.map((i) => obterCategoria(i.categoria).emoji))].slice(0, 7);
 
@@ -65,7 +69,7 @@ function CartaoHistorico({ lista }: { lista: Lista }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   container: { padding: espaco.lg, flexGrow: 1 },
   resumo: { fontSize: fonte.tamanho.pequeno, color: cores.textoSecundario, marginBottom: espaco.md },
   cartao: {
@@ -85,4 +89,4 @@ const styles = StyleSheet.create({
   vazioEmoji: { fontSize: 56 },
   vazioTitulo: { fontSize: fonte.tamanho.medio, fontWeight: fonte.peso.negrito, color: cores.texto },
   vazioTexto: { fontSize: fonte.tamanho.normal, color: cores.textoSecundario, textAlign: 'center' },
-});
+}));

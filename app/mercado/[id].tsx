@@ -13,18 +13,18 @@ import { ModalPreco } from '@/components/ModalPreco';
 import { SeloFamilia } from '@/components/SeloFamilia';
 import { useBuscarImagens } from '@/store/useBuscarImagens';
 import { useListaStore } from '@/store/useListaStore';
-import { cores, duracaoAnimacao, espaco, fonte, raio } from '@/theme';
+import { duracaoAnimacao, espaco, fonte, raio } from '@/theme';
+import type { Cores } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 import type { ItemLista } from '@/types';
 import { secoesMercado } from '@/utils/agrupar';
 import { calcularProgresso } from '@/utils/lista';
 import { type EstadoOrcamento, calcularTotalCarrinho, formatarReais, situacaoOrcamento, ultimoPreco } from '@/utils/preco';
 import { vibrarLeve, vibrarPego, vibrarSucesso } from '@/utils/vibrar';
 
-const COR_ORCAMENTO: Record<EstadoOrcamento, string> = {
-  ok: cores.primaria,
-  perto: cores.destaque,
-  estourou: cores.perigo,
-};
+function corOrcamento(estado: EstadoOrcamento, cores: Cores): string {
+  return { ok: cores.primaria, perto: cores.destaque, estourou: cores.perigo }[estado];
+}
 
 // Modo Mercado (seção 8.3): tela sempre ligada, itens grandes, tocar = pego.
 // O pego vibra, fica riscado e desce para "No carrinho". Dá para desfazer pelo aviso
@@ -32,6 +32,8 @@ const COR_ORCAMENTO: Record<EstadoOrcamento, string> = {
 // abre a tela "Compra concluída".
 // Fase 2: preço opcional no item pego ("Preço" no aviso ou "+ R$" no item) e total do carrinho no painel.
 export default function MercadoTela() {
+  const cores = useCores();
+  const styles = useEstilos();
   useKeepAwake();
 
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -154,10 +156,10 @@ export default function MercadoTela() {
             <BarraProgresso
               fracao={orcamento.fracao}
               altura={10}
-              cor={COR_ORCAMENTO[orcamento.estado]}
-              corTrilho={orcamento.estado === 'ok' ? undefined : COR_ORCAMENTO[orcamento.estado] + '33'}
+              cor={corOrcamento(orcamento.estado, cores)}
+              corTrilho={orcamento.estado === 'ok' ? undefined : corOrcamento(orcamento.estado, cores) + '33'}
             />
-            <Text style={[styles.textoOrcamento, { color: COR_ORCAMENTO[orcamento.estado] }]} accessibilityLiveRegion="polite">
+            <Text style={[styles.textoOrcamento, { color: corOrcamento(orcamento.estado, cores) }]} accessibilityLiveRegion="polite">
               {orcamento.estado === 'estourou'
                 ? `🚨 Passou ${formatarReais(-orcamento.restante)} do orçamento`
                 : orcamento.estado === 'perto'
@@ -255,7 +257,7 @@ export default function MercadoTela() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   tela: { flex: 1 },
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: espaco.xl },
   painel: {
@@ -300,4 +302,4 @@ const styles = StyleSheet.create({
   vazio: { alignItems: 'center', gap: espaco.sm, paddingVertical: espaco.xxl },
   vazioEmoji: { fontSize: 56 },
   textoVazio: { fontSize: fonte.tamanho.normal, textAlign: 'center', color: cores.textoSecundario },
-});
+}));

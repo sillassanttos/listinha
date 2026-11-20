@@ -3,7 +3,8 @@ import { forwardRef } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, type TextInputInstance, View } from 'react-native';
 
 import { obterCategoria } from '@/data/categorias';
-import { cores, espaco, fonte, raio, sombraCartao, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, sombraCartao, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores, useVerCategoria } from '@/theme/useCores';
 import type { Sugestao } from '@/utils/sugestoes';
 
 type Props = {
@@ -22,6 +23,9 @@ export const CampoAdicionar = forwardRef<TextInputInstance, Props>(function Camp
   { texto, onChangeTexto, onAdicionar, onEscolher, sugestoes },
   ref,
 ) {
+  const cores = useCores();
+  const verCategoria = useVerCategoria();
+  const styles = useEstilos();
   const temTexto = texto.trim().length > 0;
   return (
     <View>
@@ -63,7 +67,7 @@ export const CampoAdicionar = forwardRef<TextInputInstance, Props>(function Camp
             >
               <Text style={styles.sugestaoEmoji}>{s.emoji}</Text>
               <Text style={styles.sugestaoNome}>{s.nome}</Text>
-              <Text style={[styles.sugestaoCategoria, { color: obterCategoria(s.categoria).cor }]}>
+              <Text style={[styles.sugestaoCategoria, { color: verCategoria(s.categoria).cor }]}>
                 {s.origem === 'historico' ? 'já usado' : obterCategoria(s.categoria).nome}
               </Text>
             </Pressable>
@@ -74,7 +78,7 @@ export const CampoAdicionar = forwardRef<TextInputInstance, Props>(function Camp
   );
 });
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   linha: { flexDirection: 'row', gap: espaco.sm },
   campo: {
     flex: 1,
@@ -114,4 +118,4 @@ const styles = StyleSheet.create({
   sugestaoEmoji: { fontSize: 22 },
   sugestaoNome: { flex: 1, fontSize: fonte.tamanho.normal, color: cores.texto },
   sugestaoCategoria: { fontSize: fonte.tamanho.pequeno },
-});
+}));

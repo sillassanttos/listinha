@@ -18,7 +18,8 @@ import {
 import { Botao } from '@/components/Botao';
 import { SeletorLista } from '@/components/SeletorLista';
 import { useListaStore } from '@/store/useListaStore';
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 import { buscarProdutoPorCodigo, codigoValido, normalizarCodigo } from '@/utils/codigoBarras';
 import { vibrarPego, vibrarSucesso } from '@/utils/vibrar';
 
@@ -35,6 +36,8 @@ type Etapa =
 const TIPOS = ['ean13', 'ean8', 'upc_a'] as const;
 
 export default function EscanearTela() {
+  const cores = useCores();
+  const styles = useEstilos();
   const [permissao, pedirPermissao] = useCameraPermissions();
   const produtosPorCodigo = useListaStore((s) => s.produtosPorCodigo);
   const lembrarProdutoPorCodigo = useListaStore((s) => s.lembrarProdutoPorCodigo);
@@ -258,7 +261,7 @@ export default function EscanearTela() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   tela: { flex: 1, backgroundColor: '#000000' },
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: espaco.xl, gap: espaco.sm, backgroundColor: cores.fundo },
   emojiGrande: { fontSize: 56 },
@@ -336,4 +339,4 @@ const styles = StyleSheet.create({
   linhaLinks: { flexDirection: 'row', justifyContent: 'space-between' },
   linkCentro: { alignSelf: 'center' },
   link: { fontSize: fonte.tamanho.normal, fontWeight: fonte.peso.negrito, color: cores.primariaEscura },
-});
+}));

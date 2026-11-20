@@ -1,6 +1,7 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos } from '@/theme/useCores';
 import type { Unidade } from '@/types';
 import { UNIDADES } from '@/utils/quantidade';
 
@@ -14,6 +15,7 @@ type Props = {
 
 // Escolha rápida da unidade de um item (un, kg, g, L, ml, dz, pct, cx).
 export function ModalUnidade({ visivel, nomeItem, atual, onEscolher, onFechar }: Props) {
+  const styles = useEstilos();
   return (
     <Modal visible={visivel} transparent animationType="fade" onRequestClose={onFechar}>
       <Pressable style={styles.fundo} onPress={onFechar} accessibilityLabel="Fechar">
@@ -43,7 +45,7 @@ export function ModalUnidade({ visivel, nomeItem, atual, onEscolher, onFechar }:
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   fundo: { flex: 1, justifyContent: 'center', padding: espaco.xl, backgroundColor: 'rgba(0,0,0,0.35)' },
   janela: { backgroundColor: cores.superficie, borderRadius: raio.lg, padding: espaco.xl, gap: espaco.lg },
   titulo: { fontSize: fonte.tamanho.medio, fontWeight: fonte.peso.negrito, color: cores.texto },
@@ -61,4 +63,4 @@ const styles = StyleSheet.create({
   sigla: { fontSize: fonte.tamanho.medio, fontWeight: fonte.peso.negrito, color: cores.texto },
   nome: { fontSize: 11, color: cores.textoSecundario },
   textoSelecionado: { color: cores.textoSobrePrimaria },
-});
+}));

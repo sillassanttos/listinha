@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores } from '@/theme/useCores';
 import type { ItemLista } from '@/types';
 import { formatarQuantidadeUnidade } from '@/utils/quantidade';
 import { formatarReais, lerPreco, precoParaCampo, totalDoItem, unidadeDoPreco } from '@/utils/preco';
@@ -18,6 +19,8 @@ type Props = {
 
 // Preço do item no Modo Mercado (Fase 2). Opcional: "Pular" fecha sem mudar nada.
 export function ModalPreco({ item, ultimo, onSalvar, onFechar }: Props) {
+  const cores = useCores();
+  const styles = useEstilos();
   const [texto, setTexto] = useState('');
 
   useEffect(() => {
@@ -93,7 +96,7 @@ export function ModalPreco({ item, ultimo, onSalvar, onFechar }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   fundo: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)' },
   janela: {
     backgroundColor: cores.superficie,
@@ -121,4 +124,4 @@ const styles = StyleSheet.create({
   total: { fontSize: fonte.tamanho.normal, color: cores.primariaEscura, fontWeight: fonte.peso.medio },
   ultimo: { fontSize: fonte.tamanho.normal, color: cores.primariaEscura, textDecorationLine: 'underline' },
   botoes: { flexDirection: 'row', gap: espaco.md, marginTop: espaco.sm },
-});
+}));

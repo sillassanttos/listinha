@@ -5,9 +5,9 @@ import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Botao } from '@/components/Botao';
-import { obterCategoria } from '@/data/categorias';
 import { useListaStore } from '@/store/useListaStore';
-import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { espaco, fonte, raio, toqueMinimo } from '@/theme';
+import { criarEstilos, useCores, useVerCategoria } from '@/theme/useCores';
 import { categorizar } from '@/utils/categorizar';
 import { interpretarTexto } from '@/utils/importar';
 import { formatarQuantidade } from '@/utils/quantidade';
@@ -15,6 +15,9 @@ import { formatarQuantidade } from '@/utils/quantidade';
 // "Importar do WhatsApp" (Fase 2): colar o texto da lista e o app separa um item por linha.
 // Mostra a prévia com a categoria de cada item; dá para desmarcar o que não quiser.
 export default function ImportarTela() {
+  const cores = useCores();
+  const verCategoria = useVerCategoria();
+  const styles = useEstilos();
   const importarItens = useListaStore((s) => s.importarItens);
   const definirAvisoPendente = useListaStore((s) => s.definirAvisoPendente);
 
@@ -96,7 +99,7 @@ export default function ImportarTela() {
             {itens.map((item, i) => {
               const marcado = !desmarcados.has(i);
               const sugestao = categorizar(item.nome);
-              const categoria = obterCategoria(sugestao.categoria);
+              const categoria = verCategoria(sugestao.categoria);
               const unidade = item.unidade ?? sugestao.unidade;
               return (
                 <Pressable
@@ -140,7 +143,7 @@ export default function ImportarTela() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   container: { padding: espaco.lg, gap: espaco.md, paddingBottom: espaco.xxl },
   ajuda: { fontSize: fonte.tamanho.normal, color: cores.textoSecundario },
   botaoColar: {
@@ -169,4 +172,4 @@ const styles = StyleSheet.create({
   emoji: { fontSize: 24 },
   nome: { fontSize: fonte.tamanho.normal, color: cores.texto, fontWeight: fonte.peso.medio },
   detalhe: { fontSize: fonte.tamanho.pequeno },
-});
+}));

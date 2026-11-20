@@ -4,7 +4,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Botao } from '@/components/Botao';
 import { useListaStore } from '@/store/useListaStore';
-import { cores, espaco, fonte, raio, sombraCartao } from '@/theme';
+import { espaco, fonte, raio, sombraCartao } from '@/theme';
+import { criarEstilos } from '@/theme/useCores';
 import { calcularProgresso } from '@/utils/lista';
 import { calcularTotalCarrinho, formatarReais } from '@/utils/preco';
 import { formatarQuantidadeUnidade } from '@/utils/quantidade';
@@ -13,6 +14,7 @@ import { vibrarSucesso } from '@/utils/vibrar';
 // "Compra concluída 🎉" (seção 8.3): finalizar a lista (vai para o histórico)
 // e, se faltou algo, levar os itens não comprados para a próxima lista.
 export default function CompraConcluidaTela() {
+  const styles = useEstilos();
   const { id } = useLocalSearchParams<{ id: string }>();
   const lista = useListaStore((s) => s.listas.find((l) => l.id === id));
   const finalizarCompra = useListaStore((s) => s.finalizarCompra);
@@ -106,7 +108,7 @@ export default function CompraConcluidaTela() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((cores) => ({
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: espaco.xl },
   container: { padding: espaco.xl, gap: espaco.md, alignItems: 'stretch' },
   festa: { fontSize: 80, textAlign: 'center', marginTop: espaco.lg },
@@ -118,4 +120,4 @@ const styles = StyleSheet.create({
   pendente: { fontSize: fonte.tamanho.normal, color: cores.texto },
   botoes: { gap: espaco.md, marginTop: espaco.md },
   ajuda: { fontSize: fonte.tamanho.pequeno, color: cores.textoSuave, textAlign: 'center' },
-});
+}));
