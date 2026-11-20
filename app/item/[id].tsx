@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Botao } from '@/components/Botao';
@@ -9,6 +9,9 @@ import { useListaStore } from '@/store/useListaStore';
 import { cores, espaco, fonte, raio, toqueMinimo } from '@/theme';
 import type { CategoriaId, ItemLista, Unidade } from '@/types';
 import { categorizar } from '@/utils/categorizar';
+import { historicoDePrecos, resumoPrecos } from '@/utils/historicoPrecos';
+import { chaveBusca } from '@/utils/normalizar';
+import { formatarReais } from '@/utils/preco';
 import { categoriaSugerida } from '@/utils/categoriasManuais';
 import {
   UNIDADES,
@@ -40,6 +43,13 @@ function Formulario({ item }: { item: ItemLista }) {
   const atualizarItem = useListaStore((s) => s.atualizarItem);
   const ordemCategorias = useListaStore((s) => s.ordemCategorias);
   const categoriasManuais = useListaStore((s) => s.categoriasManuais);
+  const historico = useListaStore((s) => s.historico);
+  // Fase 3: atalho para o histórico de preços deste produto (se já tiver preço em alguma compra).
+  const precos = useMemo(() => {
+    const chave = chaveBusca(item.nome);
+    const p = historicoDePrecos(historico).find((h) => h.chave === chave);
+    return p ? { chave, unidade: p.unidadePreco, resumo: resumoPrecos(p.pontos)!, compras: p.pontos.length } : null;
+  }, [historico, item.nome]);
 
   const [nome, setNome] = useState(item.nome);
   const [quantidade, setQuantidade] = useState(item.quantidade);
@@ -222,6 +232,19 @@ function Formulario({ item }: { item: ItemLista }) {
           </Text>
         ) : null}
 
+        {precos && (
+          <Pressable
+            onPress={() => router.push({ pathname: '/preco/[chave]', params: { chave: precos.chave } })}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.linkPrecos, pressed && { opacity: 0.7 }]}
+          >
+            <Text style={styles.linkPrecosTexto}>
+              📈 Último preço: {formatarReais(precos.resumo.ultimo)} por {precos.unidade} · ver as {precos.compras}{' '}
+              {precos.compras === 1 ? 'compra' : 'compras'}
+            </Text>
+          </Pressable>
+        )}
+
         <Text style={styles.rotulo}>Observação</Text>
         <TextInput
           value={observacao}
@@ -288,6 +311,8 @@ const styles = StyleSheet.create({
   opcaoTextoAtivo: { color: cores.textoSobrePrimaria },
   categoria: { minHeight: 44, paddingHorizontal: espaco.md, borderRadius: raio.pilula, borderWidth: 1, justifyContent: 'center' },
   categoriaTexto: { fontSize: fonte.tamanho.pequeno + 1, fontWeight: fonte.peso.medio },
+  linkPrecos: { marginTop: espaco.md, padding: espaco.md, borderRadius: raio.md, backgroundColor: cores.primariaClara },
+  linkPrecosTexto: { fontSize: fonte.tamanho.pequeno + 1, fontWeight: fonte.peso.medio, color: cores.primariaEscura },
   dica: { fontSize: fonte.tamanho.pequeno, color: cores.textoSecundario, marginTop: espaco.xs },
   campoObservacao: { minHeight: 72, paddingTop: espaco.md, textAlignVertical: 'top' },
 });

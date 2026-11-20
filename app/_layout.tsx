@@ -44,6 +44,8 @@ export default function RootLayout() {
         <Stack.Screen name="concluida/[id]" options={{ title: 'Compra concluída' }} />
         <Stack.Screen name="despensa" options={{ title: 'Despensa' }} />
         <Stack.Screen name="historico" options={{ title: 'Histórico' }} />
+        <Stack.Screen name="precos" options={{ title: 'Preços' }} />
+        <Stack.Screen name="preco/[chave]" options={{ title: 'Preço' }} />
         <Stack.Screen name="configuracoes" options={{ title: 'Configurações' }} />
         <Stack.Screen name="conta" options={{ title: 'Conta' }} />
         <Stack.Screen name="familia" options={{ title: 'Família' }} />
